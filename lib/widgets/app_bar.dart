@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:popover/popover.dart';
 import 'package:shape_mobile/services/auth_service.dart';
+import 'package:toastification/toastification.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -186,18 +187,46 @@ void showConfirmation(BuildContext context) {
                       child: GFButton(
                         onPressed: () async {
                           final authService = AuthService();
-                          await authService.logout();
 
-                          // After logout is done, then navigate
-                          if (context.mounted) {
-                            Navigator.pushNamedAndRemoveUntil(
-                              context,
-                              '/',
-                              (route) => false,
+                          try {
+                            await authService.logout().timeout(
+                              const Duration(seconds: 5),
+                              onTimeout: () {
+                                toastification.showError(
+                                  context: context,
+                                  title:
+                                      'Connection timed out. Please check your internet.',
+                                  autoCloseDuration: const Duration(seconds: 5),
+                                  padding: const EdgeInsets.all(10),
+                                );
+                                return;
+                              },
+                            );
+
+                            toastification.showSuccess(
+                              context: context,
+                              title: 'Logged out successfully!',
+                              autoCloseDuration: const Duration(seconds: 5),
+                              padding: const EdgeInsets.all(10),
+                            );
+
+                            if (context.mounted) {
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                '/',
+                                (route) => false,
+                              );
+                            }
+                          } catch (e) {
+                            toastification.showError(
+                              context: context,
+                              title:
+                                  'Failed to logout. Please check your connection.',
+                              autoCloseDuration: const Duration(seconds: 5),
+                              padding: const EdgeInsets.all(10),
                             );
                           }
                         },
-
                         color: Colors.red,
                         text: "Continue",
                         textStyle: const TextStyle(color: Colors.white),

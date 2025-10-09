@@ -37,7 +37,7 @@ class GreetingWidget extends StatelessWidget {
             children: [
               Text(_getGreeting()),
               Text(
-                PreferenceService.fullname ?? "Guest",
+                PreferenceService.fullname!,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
             ],

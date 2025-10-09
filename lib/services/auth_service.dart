@@ -11,8 +11,7 @@ class ApiException implements Exception {
 }
 
 class AuthService {
-  final String baseUrl =
-      "http://10.0.2.2:8000/api"; // replace with Laragon host (see note below)
+  final String baseUrl = "http://10.0.2.2:8000/api";
   final PreferenceService _prefs = PreferenceService();
 
   Future<void> loginStudent(String username, String password) async {
@@ -42,9 +41,27 @@ class AuthService {
 
     if (token != null) {
       final url = Uri.parse("$baseUrl/student/logout");
-      await http.post(url, headers: {"Authorization": "Bearer $token"});
-    }
 
-    await _prefs.clearPreferences();
+      try {
+        final response = await http
+            .post(url, headers: {"Authorization": "Bearer $token"})
+            .timeout(
+              const Duration(seconds: 5),
+              onTimeout: () {
+                throw Exception(
+                  "Connection timed out. Please check your internet.",
+                );
+              },
+            );
+
+        if (response.statusCode == 200) {
+          await _prefs.clearPreferences();
+        } else {
+          throw Exception("Logout failed with status: ${response.statusCode}");
+        }
+      } catch (e) {
+        throw Exception(e.toString());
+      }
+    }
   }
 }

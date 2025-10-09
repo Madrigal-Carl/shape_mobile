@@ -48,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
             },
           );
 
-      if (mounted && !_isLoading) {
+      if (mounted) {
         toastification.showSuccess(
           context: context,
           title: 'Logged in Successfully!',
@@ -60,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       toastification.showError(
         context: context,
-        title: e.toString(), // already clean
+        title: e.toString(),
         autoCloseDuration: const Duration(seconds: 5),
         padding: const EdgeInsets.all(10),
       );
