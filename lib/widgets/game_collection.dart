@@ -5,11 +5,12 @@ class GameCollectionWidget extends StatelessWidget {
   final String title;
   final bool? showSubtitle;
 
-  const GameCollectionWidget(
-      {super.key,
-      required this.title,
-      required this.games,
-      this.showSubtitle = false});
+  const GameCollectionWidget({
+    super.key,
+    required this.title,
+    required this.games,
+    this.showSubtitle = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,10 +22,7 @@ class GameCollectionWidget extends StatelessWidget {
       children: [
         Text(
           title,
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
         ),
         GridView.count(
           shrinkWrap: true,
@@ -52,10 +50,7 @@ class GameCollectionWidget extends StatelessWidget {
                       child: SizedBox(
                         width: double.infinity,
                         height: 93,
-                        child: Image.asset(
-                          game['image'],
-                          fit: BoxFit.cover,
-                        ),
+                        child: Image.asset(game['image'], fit: BoxFit.cover),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -69,9 +64,7 @@ class GameCollectionWidget extends StatelessWidget {
                     if (showSubtitle == true)
                       Text(
                         game['subtitle'],
-                        style: const TextStyle(
-                          fontSize: 12,
-                        ),
+                        style: const TextStyle(fontSize: 12),
                       ),
                   ],
                 ),

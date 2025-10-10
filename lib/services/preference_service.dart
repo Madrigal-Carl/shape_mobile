@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shape_mobile/models/LessonModel.dart';
 
 class PreferenceService {
   // 🔹 Cached values
@@ -7,6 +8,8 @@ class PreferenceService {
   static String? fullname;
   static String? lrn;
   static String? avatarPath;
+  static int? latestLessonId;
+  static String? latestLessonTitle;
 
   /// Load saved preferences on app startup
   static Future<void> loadPreferences() async {
@@ -16,6 +19,8 @@ class PreferenceService {
     fullname = prefs.getString('fullname');
     lrn = prefs.getString('lrn');
     avatarPath = prefs.getString('avatarPath');
+    latestLessonId = prefs.getInt('latest_lesson_id');
+    latestLessonTitle = prefs.getString('latest_lesson_title');
   }
 
   /// Save login data and cache them
@@ -64,5 +69,14 @@ class PreferenceService {
     PreferenceService.fullname = null;
     PreferenceService.lrn = null;
     PreferenceService.avatarPath = null;
+  }
+
+  static Future<void> saveLatestLesson(Lesson lesson) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('latest_lesson_id', lesson.id);
+    await prefs.setString('latest_lesson_title', lesson.title);
+
+    latestLessonId = lesson.id;
+    latestLessonTitle = lesson.title;
   }
 }

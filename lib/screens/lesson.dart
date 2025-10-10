@@ -8,24 +8,6 @@ class LessonScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> lessons = [
-      {
-        "image": "assets/flutter/lessons/lesson_1.png",
-        "title": "Lesson Title 1",
-        "progress": 98,
-      },
-      {
-        "image": "assets/flutter/lessons/lesson_2.png",
-        "title": "Lesson Title 2",
-        "progress": 75,
-      },
-      {
-        "image": "assets/flutter/lessons/lesson_3.png",
-        "title": "Lesson Title 3",
-        "progress": 30,
-      },
-    ];
-
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
@@ -33,7 +15,7 @@ class LessonScreen extends StatelessWidget {
           children: [
             GreetingWidget(),
             RecentLessonWidget(showTitle: true),
-            LessonCollectionWidget(lessons: lessons, title: 'Ongoing Lessons'),
+            LessonCollectionWidget(title: 'Ongoing Lessons'),
           ],
         ),
       ),

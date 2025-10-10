@@ -131,4 +131,18 @@ class AppDatabase {
 
     print("🧹 All SQLite tables cleared.");
   }
+
+  Future<Lesson?> fetchLatestLesson() async {
+    final db = await database;
+    final result = await db.query(
+      lessonsTable,
+      orderBy: "datetime(created_at) DESC",
+      limit: 1,
+    );
+
+    if (result.isNotEmpty) {
+      return Lesson.fromJson(result.first);
+    }
+    return null;
+  }
 }

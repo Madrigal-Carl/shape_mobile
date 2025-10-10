@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shape_mobile/models/LessonModel.dart';
+import 'package:shape_mobile/db/app_database.dart';
+import 'package:shape_mobile/services/preference_service.dart';
 
-class RecentLessonWidget extends StatelessWidget {
+class RecentLessonWidget extends StatefulWidget {
   final String title;
   final bool showTitle;
 
@@ -11,94 +14,131 @@ class RecentLessonWidget extends StatelessWidget {
   });
 
   @override
+  State<RecentLessonWidget> createState() => _RecentLessonWidgetState();
+}
+
+class _RecentLessonWidgetState extends State<RecentLessonWidget> {
+  Lesson? _latestLesson;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCachedLesson();
+    _fetchLatestLessonFromDB();
+  }
+
+  void _loadCachedLesson() {
+    final cachedId = PreferenceService.latestLessonId;
+    final cachedTitle = PreferenceService.latestLessonTitle;
+
+    if (cachedId != null && cachedTitle != null) {
+      _latestLesson = Lesson(id: cachedId, title: cachedTitle, schoolYearId: 0);
+      _isLoading = false;
+    }
+  }
+
+  /// Fetch the latest lesson from DB in background
+  Future<void> _fetchLatestLessonFromDB() async {
+    try {
+      final latestLesson = await AppDatabase.instance.fetchLatestLesson();
+      if (latestLesson != null) {
+        setState(() {
+          _latestLesson = latestLesson;
+          _isLoading = false;
+        });
+        // Update cache
+        await PreferenceService.saveLatestLesson(latestLesson);
+      }
+    } catch (e) {
+      debugPrint("Error fetching latest lesson: $e");
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_latestLesson == null) return const SizedBox.shrink();
+
     return Padding(
-      padding: const EdgeInsets.only(
-        bottom: 12,
-      ),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: 12,
         children: [
-          if (showTitle == true)
+          if (widget.showTitle)
             Text(
-              title,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-              ),
+              widget.title,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
             ),
           GestureDetector(
             onTap: () {
-              print('Click on Lesson Title');
+              debugPrint('Clicked on Lesson Title: ${_latestLesson!.title}');
             },
-            child: Column(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: SizedBox(
-                    height: 135,
-                    width: double.infinity,
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: Image.asset(
-                            'assets/flutter/images/lesson_banner.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          width: MediaQuery.of(context).size.width * 0.75,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                                colors: [
-                                  Colors.black.withOpacity(0.9),
-                                  Colors.transparent,
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.only(
-                            left: 20,
-                          ),
-                          width: MediaQuery.of(context).size.width * 0.5,
-                          child: Column(
-                            spacing: 2,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Today\'s Lesson',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                ),
-                              ),
-                              RichText(
-                                text: TextSpan(
-                                  text: 'Lesson Title Here',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              )
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: SizedBox(
+                height: 135,
+                width: double.infinity,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Image.asset(
+                        'assets/flutter/images/lesson_banner.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: MediaQuery.of(context).size.width * 0.75,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              Colors.black.withOpacity(0.9),
+                              Colors.transparent,
                             ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                    Container(
+                      padding: const EdgeInsets.only(left: 20),
+                      width: MediaQuery.of(context).size.width * 0.5,
+                      child: Column(
+                        spacing: 2,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Today\'s Lesson',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          RichText(
+                            text: TextSpan(
+                              text: _latestLesson!.title,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ],
