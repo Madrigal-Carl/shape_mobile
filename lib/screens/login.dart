@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (e.message == "connection_timeout") {
         toastification.showError(
           context: context,
-          title: 'Connection timed out while downloading profile image.',
+          title: 'Connection timed out. Please check your internet.',
           autoCloseDuration: const Duration(seconds: 5),
           padding: const EdgeInsets.all(10),
         );
