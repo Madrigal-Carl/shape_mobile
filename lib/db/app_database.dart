@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:shape_mobile/models/StudentModel.dart';
+import 'package:shape_mobile/models/LessonModel.dart';
 
 class AppDatabase {
   AppDatabase._privateConstructor();
@@ -12,6 +13,7 @@ class AppDatabase {
 
   // Table name
   static const String studentsTable = 'students';
+  static const String lessonsTable = 'lessons';
 
   Future<Database> get database async {
     if (_db != null) return _db!;
@@ -36,7 +38,7 @@ class AppDatabase {
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    // Create students table (mirror of your Laravel resource + sync columns)
+    // Students Table
     await db.execute('''
       CREATE TABLE $studentsTable (
         id INTEGER PRIMARY KEY,
@@ -49,6 +51,19 @@ class AppDatabase {
         birth_date TEXT,
         disability_type TEXT,
         support_need TEXT,
+        created_at TEXT,
+        updated_at TEXT,
+        is_synced INTEGER DEFAULT 1
+      )
+    ''');
+
+    // Lessons Table
+    await db.execute('''
+      CREATE TABLE $lessonsTable (
+        id INTEGER PRIMARY KEY,
+        school_year_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
         created_at TEXT,
         updated_at TEXT,
         is_synced INTEGER DEFAULT 1
@@ -68,12 +83,22 @@ class AppDatabase {
     }
   }
 
-  /// Insert or replace student
+  // Insert student
   Future<void> insertStudent(Student student) async {
     final db = await database;
     await db.insert(
       studentsTable,
       student.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // Insert lesson
+  Future<void> insertLesson(Lesson lesson) async {
+    final db = await database;
+    await db.insert(
+      lessonsTable,
+      lesson.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }

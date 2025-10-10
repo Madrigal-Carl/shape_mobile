@@ -5,6 +5,7 @@ import 'preference_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shape_mobile/db/app_database.dart';
 import 'package:shape_mobile/models/StudentModel.dart';
+import 'package:shape_mobile/models/LessonModel.dart';
 
 class ApiException implements Exception {
   final String message;
@@ -27,7 +28,9 @@ class AuthService {
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200 && data['success'] == true) {
-      final studentJson = data['student'];
+      final dataWrapper = data['data'];
+      final studentJson = dataWrapper['student'];
+      final lessonsJson = dataWrapper['lessons'] ?? [];
 
       String? imageUrl = studentJson['path'];
       String? localImagePath;
@@ -57,6 +60,11 @@ class AuthService {
       // ✅ Insert or update student in local SQLite
       final student = Student.fromJson(studentJson);
       await AppDatabase.instance.insertStudent(student);
+
+      for (var lessonJson in lessonsJson) {
+        final lesson = Lesson.fromJson(lessonJson);
+        await AppDatabase.instance.insertLesson(lesson);
+      }
 
       return true;
     } else {
