@@ -5,9 +5,14 @@ import 'package:shape_mobile/screens/notification.dart';
 import 'package:shape_mobile/screens/profile.dart';
 import 'package:shape_mobile/screens/lesson_session.dart';
 import 'package:shape_mobile/services/preference_service.dart';
+import 'package:shape_mobile/db/app_database.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppDatabase.instance.initDB();
+  final tables = await AppDatabase.instance.getTables();
+  debugPrint("SQLite Tables Found: $tables");
+
   final prefs = PreferenceService();
   await prefs.loadCache();
 

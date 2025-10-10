@@ -30,13 +30,13 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await _authService
+      final bool success = await _authService
           .loginStudent(
             _usernameController.text.trim(),
             _passwordController.text.trim(),
           )
           .timeout(
-            const Duration(seconds: 5),
+            const Duration(seconds: 60),
             onTimeout: () {
               toastification.showError(
                 context: context,
@@ -44,9 +44,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 autoCloseDuration: const Duration(seconds: 5),
                 padding: const EdgeInsets.all(10),
               );
-              return;
+              return false;
             },
           );
+
+      if (success != true) return;
 
       if (mounted) {
         toastification.showSuccess(
@@ -141,15 +143,28 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             GFButton(
               onPressed: _isLoading ? null : _handleLogin,
-              text: _isLoading ? "Logging in..." : "Login",
-              textStyle: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1.0,
-              ),
+              color: Colors.blue, // or your theme color
               shape: GFButtonShape.pills,
               fullWidthButton: true,
               size: GFSize.LARGE,
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      "Login",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.0,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
           ],
         ),

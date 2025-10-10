@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:popover/popover.dart';
 import 'package:shape_mobile/services/auth_service.dart';
 import 'package:toastification/toastification.dart';
+import 'package:shape_mobile/services/preference_service.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -13,6 +15,15 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final currentRoute = ModalRoute.of(context)?.settings.name;
+    final String? avatarPath = PreferenceService.avatarPath;
+    final ImageProvider profileImage;
+
+    // ✅ Prefer local file image if available
+    if (avatarPath != null && File(avatarPath).existsSync()) {
+      profileImage = FileImage(File(avatarPath));
+    } else {
+      profileImage = const AssetImage('assets/flutter/images/profile.png');
+    }
 
     return GFAppBar(
       automaticallyImplyLeading: showReturn,
@@ -74,9 +85,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         const SizedBox(width: 8),
         Builder(
           builder: (context) => GFIconButton(
-            icon: const CircleAvatar(
-              backgroundImage: AssetImage('assets/flutter/images/profile.png'),
-            ),
+            icon: CircleAvatar(backgroundImage: profileImage),
             onPressed: () {
               showPopover(
                 context: context,
@@ -183,57 +192,7 @@ void showConfirmation(BuildContext context) {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Expanded(
-                      child: GFButton(
-                        onPressed: () async {
-                          final authService = AuthService();
-
-                          try {
-                            await authService.logout().timeout(
-                              const Duration(seconds: 5),
-                              onTimeout: () {
-                                toastification.showError(
-                                  context: context,
-                                  title:
-                                      'Connection timed out. Please check your internet.',
-                                  autoCloseDuration: const Duration(seconds: 5),
-                                  padding: const EdgeInsets.all(10),
-                                );
-                                return;
-                              },
-                            );
-
-                            toastification.showSuccess(
-                              context: context,
-                              title: 'Logged out successfully!',
-                              autoCloseDuration: const Duration(seconds: 5),
-                              padding: const EdgeInsets.all(10),
-                            );
-
-                            if (context.mounted) {
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                '/',
-                                (route) => false,
-                              );
-                            }
-                          } catch (e) {
-                            toastification.showError(
-                              context: context,
-                              title:
-                                  'Failed to logout. Please check your connection.',
-                              autoCloseDuration: const Duration(seconds: 5),
-                              padding: const EdgeInsets.all(10),
-                            );
-                          }
-                        },
-                        color: Colors.red,
-                        text: "Continue",
-                        textStyle: const TextStyle(color: Colors.white),
-                        shape: GFButtonShape.pills,
-                        size: GFSize.MEDIUM,
-                      ),
-                    ),
+                    Expanded(child: LogoutButton()),
                   ],
                 ),
               ],
@@ -243,4 +202,66 @@ void showConfirmation(BuildContext context) {
       );
     },
   );
+}
+
+Future<void> handleLogout(BuildContext context) async {
+  final authService = AuthService();
+
+  final success = await authService.logout();
+
+  if (!success) {
+    toastification.showError(
+      context: context,
+      title: 'Failed to logout. Please check your connection.',
+      autoCloseDuration: const Duration(seconds: 5),
+      padding: const EdgeInsets.all(10),
+    );
+    Navigator.pop(context);
+    return;
+  }
+
+  toastification.showSuccess(
+    context: context,
+    title: 'Logged out successfully!',
+    autoCloseDuration: const Duration(seconds: 5),
+    padding: const EdgeInsets.all(10),
+  );
+
+  if (context.mounted) {
+    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+  }
+}
+
+class LogoutButton extends StatefulWidget {
+  @override
+  _LogoutButtonState createState() => _LogoutButtonState();
+}
+
+class _LogoutButtonState extends State<LogoutButton> {
+  bool isLoggingOut = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GFButton(
+      onPressed: isLoggingOut
+          ? null
+          : () async {
+              setState(() => isLoggingOut = true);
+              await handleLogout(context);
+            },
+      color: Colors.red,
+      shape: GFButtonShape.pills,
+      size: GFSize.MEDIUM,
+      child: isLoggingOut
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
+          : const Text("Continue", style: TextStyle(color: Colors.white)),
+    );
+  }
 }
