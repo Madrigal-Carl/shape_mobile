@@ -59,6 +59,22 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         Navigator.pushReplacementNamed(context, '/home');
       }
+    } on ApiException catch (e) {
+      if (e.message == "connection_timeout") {
+        toastification.showError(
+          context: context,
+          title: 'Connection timed out while downloading profile image.',
+          autoCloseDuration: const Duration(seconds: 5),
+          padding: const EdgeInsets.all(10),
+        );
+      } else {
+        toastification.showError(
+          context: context,
+          title: e.toString(),
+          autoCloseDuration: const Duration(seconds: 5),
+          padding: const EdgeInsets.all(10),
+        );
+      }
     } catch (e) {
       toastification.showError(
         context: context,

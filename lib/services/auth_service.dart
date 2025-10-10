@@ -37,12 +37,13 @@ class AuthService {
         print("📥 Downloading image from: $imageUrl");
         localImagePath = await downloadImageToLocal(imageUrl);
 
-        if (localImagePath != null) {
-          print("✅ Image saved locally: $localImagePath");
-          studentJson['path'] = localImagePath;
-        } else {
-          print("⚠️ Failed to save image locally, keeping remote path.");
+        // ❌ If still null after retries, stop login and throw
+        if (localImagePath == null) {
+          throw ApiException("connection_timeout");
         }
+
+        print("✅ Image saved locally: $localImagePath");
+        studentJson['path'] = localImagePath;
       }
 
       // ✅ Save in SharedPreferences
@@ -64,7 +65,11 @@ class AuthService {
   }
 
   /// Downloads an image and stores it locally, returns the full local path
-  Future<String?> downloadImageToLocal(String imageUrl) async {
+  Future<String?> downloadImageToLocal(
+    String imageUrl, {
+    int retryCount = 0,
+  }) async {
+    const int maxRetries = 10;
     final uri = Uri.parse(imageUrl);
     final fileName = uri.pathSegments.last;
 
@@ -76,12 +81,8 @@ class AuthService {
         final localPath = "${directory.path}/$fileName";
         final file = File(localPath);
 
-        // ✅ Ensure previous file is deleted before writing
-        if (await file.exists()) {
-          await file.delete();
-        }
+        if (await file.exists()) await file.delete();
 
-        // ✅ Write bytes safely and flush
         final raf = await file.open(mode: FileMode.write);
         await raf.writeFrom(response.bodyBytes);
         await raf.flush();
@@ -95,12 +96,17 @@ class AuthService {
     } catch (e) {
       print("❌ Image download error: $e");
 
-      // 🌀 Retry once if connection was closed unexpectedly
-      if (e.toString().contains('Connection closed')) {
-        await Future.delayed(const Duration(milliseconds: 300));
-        return downloadImageToLocal(imageUrl);
+      // 🌀 Retry only if connection closed and retryCount < maxRetries
+      if (e.toString().contains('Connection closed') &&
+          retryCount < maxRetries) {
+        final nextTry = retryCount + 1;
+        print("🔁 Retrying download... Attempt $nextTry/$maxRetries");
+        await Future.delayed(Duration(milliseconds: 500 * nextTry));
+        return downloadImageToLocal(imageUrl, retryCount: nextTry);
       }
     }
+
+    print("🚫 Download failed after $retryCount retries.");
     return null;
   }
 
