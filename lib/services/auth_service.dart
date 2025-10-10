@@ -31,7 +31,7 @@ class AuthService {
       body: {"username": username, "password": password},
     );
 
-    onProgress?.call("Processing server response...");
+    onProgress?.call("Processing...");
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200 && data['success'] == true) {
@@ -39,21 +39,19 @@ class AuthService {
       final studentJson = dataWrapper['student'];
       final lessonsJson = dataWrapper['lessons'] ?? [];
 
-      String? imageUrl = studentJson['path'];
-      String? localImagePath;
+      String? mediaUrl = studentJson['path'];
+      String? localMediaPath;
 
-      // ✅ Download image and replace path with local file path
-      if (imageUrl != null && imageUrl.isNotEmpty) {
-        print("📥 Downloading image from: $imageUrl");
-        localImagePath = await downloadImageToLocal(imageUrl);
+      // ✅ Download media (image/video) and replace path with local file path
+      if (mediaUrl != null && mediaUrl.isNotEmpty) {
+        onProgress?.call("Downloading...");
+        localMediaPath = await downloadFileToLocal(mediaUrl);
 
-        // ❌ If still null after retries, stop login and throw
-        if (localImagePath == null) {
+        if (localMediaPath == null) {
           throw ApiException("connection_timeout");
         }
 
-        print("✅ Image saved locally: $localImagePath");
-        studentJson['path'] = localImagePath;
+        studentJson['path'] = localMediaPath;
       }
 
       // ✅ Save in SharedPreferences
@@ -62,7 +60,7 @@ class AuthService {
         token: data['token'],
         fullname: studentJson['fullname'],
         lrn: studentJson['lrn'],
-        avatarPath: localImagePath,
+        avatarPath: localMediaPath,
       );
 
       // ✅ Insert or update student in local SQLite
@@ -74,52 +72,65 @@ class AuthService {
         await AppDatabase.instance.insertLesson(lesson);
       }
 
-      onProgress?.call("Done!");
+      onProgress?.call("Success!");
       return true;
     } else {
       throw ApiException(data['message'] ?? "Login failed");
     }
   }
 
-  /// Downloads an image and stores it locally, returns the full local path
-  Future<String?> downloadImageToLocal(
-    String imageUrl, {
+  /// Downloads a file (image or video) and stores it locally with streaming
+  Future<String?> downloadFileToLocal(
+    String fileUrl, {
+    void Function(double progress)? onProgress,
     int retryCount = 0,
   }) async {
     const int maxRetries = 10;
-    final uri = Uri.parse(imageUrl);
+    final uri = Uri.parse(fileUrl);
     final fileName = uri.pathSegments.last;
+    final directory = await getApplicationDocumentsDirectory();
+    final localPath = "${directory.path}/$fileName";
 
     try {
-      final response = await http.get(uri);
+      final client = HttpClient();
+      final request = await client.getUrl(uri);
+      final response = await request.close();
 
       if (response.statusCode == 200) {
-        final directory = await getApplicationDocumentsDirectory();
-        final localPath = "${directory.path}/$fileName";
         final file = File(localPath);
-
         if (await file.exists()) await file.delete();
-
         final raf = await file.open(mode: FileMode.write);
-        await raf.writeFrom(response.bodyBytes);
-        await raf.flush();
-        await raf.close();
 
-        print("✅ Image successfully saved to: $localPath");
+        final contentLength = response.contentLength;
+        int received = 0;
+
+        await for (var chunk in response) {
+          raf.writeFromSync(chunk);
+          received += chunk.length;
+          if (onProgress != null && contentLength > 0) {
+            onProgress(received / contentLength);
+          }
+        }
+
+        await raf.close();
+        client.close(force: true);
+
+        print("✅ File successfully saved to: $localPath");
         return localPath;
       } else {
-        print("⚠️ Image download failed. Status code: ${response.statusCode}");
+        throw Exception("Failed to download: ${response.statusCode}");
       }
     } catch (e) {
-      print("❌ Image download error: $e");
-
-      // 🌀 Retry only if connection closed and retryCount < maxRetries
-      if (e.toString().contains('Connection closed') &&
-          retryCount < maxRetries) {
+      print("❌ File download error: $e");
+      if (retryCount < maxRetries) {
         final nextTry = retryCount + 1;
         print("🔁 Retrying download... Attempt $nextTry/$maxRetries");
-        await Future.delayed(Duration(milliseconds: 500 * nextTry));
-        return downloadImageToLocal(imageUrl, retryCount: nextTry);
+        await Future.delayed(Duration(seconds: 1));
+        return downloadFileToLocal(
+          fileUrl,
+          onProgress: onProgress,
+          retryCount: nextTry,
+        );
       }
     }
 
@@ -139,16 +150,10 @@ class AuthService {
           .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
-        // ✅ Clear preferences
         await _prefs.clearPreferences();
-
-        // ✅ Clear local database
         await AppDatabase.instance.clearAllTables();
         await AppDatabase.instance.close();
-
-        // ✅ Clear downloaded image files
         await _clearLocalFiles();
-
         print("✅ Logged out and cleared all local data.");
         return true;
       } else {
@@ -160,7 +165,6 @@ class AuthService {
     }
   }
 
-  /// Delete all files inside app documents directory
   Future<void> _clearLocalFiles() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
