@@ -18,13 +18,20 @@ class AuthService {
   final String baseUrl = "http://10.0.2.2:8000/api";
   final PreferenceService _prefs = PreferenceService();
 
-  Future<bool> loginStudent(String username, String password) async {
+  Future<bool> loginStudent(
+    String username,
+    String password, {
+    void Function(String)? onProgress,
+  }) async {
+    onProgress?.call("Sending login request...");
+
     final url = Uri.parse("$baseUrl/student/login");
     final response = await http.post(
       url,
       body: {"username": username, "password": password},
     );
 
+    onProgress?.call("Processing server response...");
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200 && data['success'] == true) {
@@ -50,6 +57,7 @@ class AuthService {
       }
 
       // ✅ Save in SharedPreferences
+      onProgress?.call("Saving data locally...");
       await _prefs.saveLoginData(
         token: data['token'],
         fullname: studentJson['fullname'],
@@ -66,6 +74,7 @@ class AuthService {
         await AppDatabase.instance.insertLesson(lesson);
       }
 
+      onProgress?.call("Done!");
       return true;
     } else {
       throw ApiException(data['message'] ?? "Login failed");

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:shape_mobile/services/auth_service.dart';
+import 'package:shape_mobile/services/loading_modal.dart';
 import 'package:toastification/toastification.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -25,69 +26,65 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
-    setState(() {
-      _isLoading = true;
-    });
+    FocusScope.of(context).unfocus();
+
+    final modalKey = GlobalKey<LoadingModalState>();
+
+    // Show the modal immediately
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>
+          LoadingModal(key: modalKey, initialMessage: "Logging in..."),
+    );
 
     try {
-      final bool success = await _authService
+      final success = await _authService
           .loginStudent(
             _usernameController.text.trim(),
             _passwordController.text.trim(),
+            onProgress: (msg) => modalKey.currentState?.updateMessage(msg),
           )
-          .timeout(
-            const Duration(seconds: 60),
-            onTimeout: () {
-              toastification.showError(
-                context: context,
-                title: 'Connection timed out. Please check your internet.',
-                autoCloseDuration: const Duration(seconds: 5),
-                padding: const EdgeInsets.all(10),
-              );
-              return false;
-            },
+          .timeout(const Duration(seconds: 60), onTimeout: () => false);
+
+      Navigator.pop(context); // Close modal
+
+      if (success) {
+        if (mounted) {
+          toastification.showSuccess(
+            context: context,
+            title: 'Logged in Successfully!',
+            autoCloseDuration: const Duration(seconds: 5),
+            padding: const EdgeInsets.all(10),
           );
-
-      if (success != true) return;
-
-      if (mounted) {
-        toastification.showSuccess(
-          context: context,
-          title: 'Logged in Successfully!',
-          autoCloseDuration: const Duration(seconds: 5),
-          padding: const EdgeInsets.all(10),
-        );
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } on ApiException catch (e) {
-      if (e.message == "connection_timeout") {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      } else {
         toastification.showError(
           context: context,
           title: 'Connection timed out. Please check your internet.',
           autoCloseDuration: const Duration(seconds: 5),
           padding: const EdgeInsets.all(10),
         );
-      } else {
-        toastification.showError(
-          context: context,
-          title: e.toString(),
-          autoCloseDuration: const Duration(seconds: 5),
-          padding: const EdgeInsets.all(10),
-        );
       }
+    } on ApiException catch (e) {
+      Navigator.pop(context); // Close modal
+      toastification.showError(
+        context: context,
+        title: e.message == "connection_timeout"
+            ? 'Connection timed out. Please check your internet.'
+            : e.message,
+        autoCloseDuration: const Duration(seconds: 5),
+        padding: const EdgeInsets.all(10),
+      );
     } catch (e) {
+      Navigator.pop(context); // Close modal
       toastification.showError(
         context: context,
         title: e.toString(),
         autoCloseDuration: const Duration(seconds: 5),
         padding: const EdgeInsets.all(10),
       );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     }
   }
 
