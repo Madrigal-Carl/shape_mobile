@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:shape_mobile/models/StudentModel.dart';
 import 'package:shape_mobile/models/LessonModel.dart';
+import 'package:shape_mobile/models/VideoModel.dart';
 
 class AppDatabase {
   AppDatabase._privateConstructor();
@@ -14,6 +15,7 @@ class AppDatabase {
   // Table name
   static const String studentsTable = 'students';
   static const String lessonsTable = 'lessons';
+  static const String videosTable = 'videos';
 
   Future<Database> get database async {
     if (_db != null) return _db!;
@@ -26,7 +28,6 @@ class AppDatabase {
     final databasesPath = await getDatabasesPath();
     final path = join(databasesPath, _dbName);
 
-    // openDatabase will call onCreate if DB didn't exist
     final db = await openDatabase(
       path,
       version: _dbVersion,
@@ -69,6 +70,21 @@ class AppDatabase {
         is_synced INTEGER DEFAULT 1
       )
     ''');
+
+    // Videos Table
+    await db.execute('''
+      CREATE TABLE $videosTable (
+        id INTEGER PRIMARY KEY,
+        lesson_id INTEGER NOT NULL,
+        url TEXT NOT NULL,
+        title TEXT NOT NULL,
+        thumbnail TEXT,
+        created_at TEXT,
+        updated_at TEXT,
+        is_synced INTEGER DEFAULT 1,
+        FOREIGN KEY (lesson_id) REFERENCES $lessonsTable (id) ON DELETE CASCADE
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -103,6 +119,40 @@ class AppDatabase {
     );
   }
 
+  // Insert video
+  Future<void> insertVideo(Video video) async {
+    final db = await database;
+    await db.insert(
+      videosTable,
+      video.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<Lesson?> fetchLatestLesson() async {
+    final db = await database;
+    final result = await db.query(
+      lessonsTable,
+      orderBy: "datetime(created_at) DESC",
+      limit: 1,
+    );
+
+    if (result.isNotEmpty) {
+      return Lesson.fromJson(result.first);
+    }
+    return null;
+  }
+
+  Future<List<Video>> fetchVideosByLessonId(int lessonId) async {
+    final db = await database;
+    final result = await db.query(
+      videosTable,
+      where: 'lesson_id = ?',
+      whereArgs: [lessonId],
+    );
+    return result.map((json) => Video.fromJson(json)).toList();
+  }
+
   /// Development helper: delete database file completely
   Future<void> deleteDatabaseFile() async {
     final databasesPath = await getDatabasesPath();
@@ -130,19 +180,5 @@ class AppDatabase {
     }
 
     print("🧹 All SQLite tables cleared.");
-  }
-
-  Future<Lesson?> fetchLatestLesson() async {
-    final db = await database;
-    final result = await db.query(
-      lessonsTable,
-      orderBy: "datetime(created_at) DESC",
-      limit: 1,
-    );
-
-    if (result.isNotEmpty) {
-      return Lesson.fromJson(result.first);
-    }
-    return null;
   }
 }
