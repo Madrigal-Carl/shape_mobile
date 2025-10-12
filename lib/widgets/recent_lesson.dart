@@ -76,7 +76,11 @@ class _RecentLessonWidgetState extends State<RecentLessonWidget> {
             ),
           GestureDetector(
             onTap: () {
-              debugPrint('Clicked on Lesson Title: ${_latestLesson!.title}');
+              Navigator.pushNamed(
+                context,
+                '/lessonSession',
+                arguments: _latestLesson,
+              );
             },
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
