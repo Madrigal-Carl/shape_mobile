@@ -6,6 +6,7 @@ import 'package:shape_mobile/screens/profile.dart';
 import 'package:shape_mobile/screens/lesson_session.dart';
 import 'package:shape_mobile/services/preference_service.dart';
 import 'package:shape_mobile/db/app_database.dart';
+import 'package:shape_mobile/models/LessonModel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,10 +41,10 @@ class MyApp extends StatelessWidget {
       },
       onGenerateRoute: (route) {
         if (route.name == '/lessonSession') {
-          final lesson = route.arguments as Map<String, dynamic>;
+          final lesson = route.arguments as Lesson;
           return MaterialPageRoute(
             settings: RouteSettings(name: '/lessonSession'),
-            builder: (context) => LessonSessionScreen(lesson: lesson),
+            builder: (context) => LessonSessionScreen(lessonId: lesson.id),
           );
         }
         return null;

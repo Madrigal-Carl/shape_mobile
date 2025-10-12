@@ -7,8 +7,9 @@ import 'package:shape_mobile/utils.dart';
 
 class VideoCollectionWidget extends StatefulWidget {
   final String title;
+  final int? lessonId;
 
-  const VideoCollectionWidget({super.key, required this.title});
+  const VideoCollectionWidget({super.key, required this.title, this.lessonId});
 
   @override
   State<VideoCollectionWidget> createState() => _VideoCollectionWidgetState();
@@ -25,7 +26,15 @@ class _VideoCollectionWidgetState extends State<VideoCollectionWidget> {
   }
 
   Future<void> _fetchVideos() async {
-    final videos = await AppDatabase.instance.fetchAllVideosSortedByLatest();
+    List<Video> videos;
+
+    if (widget.lessonId != null) {
+      videos = await AppDatabase.instance.fetchVideosByLessonId(
+        widget.lessonId!,
+      );
+    } else {
+      videos = await AppDatabase.instance.fetchAllVideosSortedByLatest();
+    }
 
     await Future.delayed(const Duration(milliseconds: 800));
 
