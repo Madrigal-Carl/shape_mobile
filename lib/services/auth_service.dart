@@ -8,6 +8,9 @@ import 'package:shape_mobile/db/app_database.dart';
 import 'package:shape_mobile/models/StudentModel.dart';
 import 'package:shape_mobile/models/LessonModel.dart';
 import 'package:shape_mobile/models/VideoModel.dart';
+import 'package:shape_mobile/models/GameActivityModel.dart';
+import 'package:shape_mobile/models/GameActivityLessonModel.dart';
+import 'package:shape_mobile/models/StudentActivityModel.dart';
 
 class ApiException implements Exception {
   final String message;
@@ -41,6 +44,10 @@ class AuthService {
       final studentJson = dataWrapper['student'];
       final lessonsJson = dataWrapper['lessons'] ?? [];
       final videosJson = dataWrapper['videos'] ?? [];
+      final gameActivitiesJson = dataWrapper['game_activities'] ?? [];
+      final gameActivityLessonsJson =
+          dataWrapper['game_activity_lessons'] ?? [];
+      final studentActivitiesJson = dataWrapper['student_activities'] ?? [];
 
       // ✅ Download media (image/video) and replace path with local file path
       onProgress?.call("Downloading...");
@@ -88,7 +95,6 @@ class AuthService {
         avatarPath: studentJson['path'],
       );
 
-      // ✅ Insert or update student in local SQLite
       final student = Student.fromJson(studentJson);
       await AppDatabase.instance.insertStudent(student);
 
@@ -100,6 +106,21 @@ class AuthService {
       for (var videoJson in videosJson) {
         final video = Video.fromJson(videoJson);
         await AppDatabase.instance.insertVideo(video);
+      }
+
+      for (final gameJson in gameActivitiesJson) {
+        final game = GameActivity.fromJson(gameJson);
+        await AppDatabase.instance.insertGameActivity(game);
+      }
+
+      for (final galJson in gameActivityLessonsJson) {
+        final gal = GameActivityLesson.fromJson(galJson);
+        await AppDatabase.instance.insertGameActivityLesson(gal);
+      }
+
+      for (final saJson in studentActivitiesJson) {
+        final sa = StudentActivity.fromJson(saJson);
+        await AppDatabase.instance.insertStudentActivity(sa);
       }
 
       onProgress?.call("Success!");
