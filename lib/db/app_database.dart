@@ -3,6 +3,9 @@ import 'package:path/path.dart';
 import 'package:shape_mobile/models/StudentModel.dart';
 import 'package:shape_mobile/models/LessonModel.dart';
 import 'package:shape_mobile/models/VideoModel.dart';
+import 'package:shape_mobile/models/GameActivityModel.dart';
+import 'package:shape_mobile/models/GameActivityLessonModel.dart';
+import 'package:shape_mobile/models/StudentActivityModel.dart';
 
 class AppDatabase {
   AppDatabase._privateConstructor();
@@ -16,6 +19,9 @@ class AppDatabase {
   static const String studentsTable = 'students';
   static const String lessonsTable = 'lessons';
   static const String videosTable = 'videos';
+  static const String gameActivitiesTable = 'game_activities';
+  static const String gameActivityLessonsTable = 'game_activity_lessons';
+  static const String studentActivitiesTable = 'student_activities';
 
   Future<Database> get database async {
     if (_db != null) return _db!;
@@ -85,6 +91,46 @@ class AppDatabase {
         FOREIGN KEY (lesson_id) REFERENCES $lessonsTable (id) ON DELETE CASCADE
       )
     ''');
+
+    // Game Activities Table
+    await db.execute('''
+      CREATE TABLE $gameActivitiesTable (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        created_at TEXT,
+        updated_at TEXT,
+        is_synced INTEGER DEFAULT 1
+      )
+    ''');
+
+    // Game Activity Lessons Table
+    await db.execute('''
+      CREATE TABLE $gameActivityLessonsTable (
+        id INTEGER PRIMARY KEY,
+        lesson_id INTEGER,
+        game_activity_id INTEGER NOT NULL,
+        created_at TEXT,
+        updated_at TEXT,
+        is_synced INTEGER DEFAULT 1,
+        FOREIGN KEY (lesson_id) REFERENCES $lessonsTable (id) ON DELETE SET NULL,
+        FOREIGN KEY (game_activity_id) REFERENCES $gameActivitiesTable (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Student Activities Table
+    await db.execute('''
+      CREATE TABLE $studentActivitiesTable (
+        id INTEGER PRIMARY KEY,
+        student_id INTEGER NOT NULL,
+        activity_lesson_id INTEGER NOT NULL,
+        activity_lesson_type TEXT NOT NULL,
+        status TEXT DEFAULT 'unfinished',
+        created_at TEXT,
+        updated_at TEXT,
+        is_synced INTEGER DEFAULT 1,
+        FOREIGN KEY (student_id) REFERENCES $studentsTable (id) ON DELETE CASCADE
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -99,7 +145,7 @@ class AppDatabase {
     }
   }
 
-  // Insert student
+  // Insert Helpers
   Future<void> insertStudent(Student student) async {
     final db = await database;
     await db.insert(
@@ -109,7 +155,6 @@ class AppDatabase {
     );
   }
 
-  // Insert lesson
   Future<void> insertLesson(Lesson lesson) async {
     final db = await database;
     await db.insert(
@@ -119,12 +164,38 @@ class AppDatabase {
     );
   }
 
-  // Insert video
   Future<void> insertVideo(Video video) async {
     final db = await database;
     await db.insert(
       videosTable,
       video.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> insertGameActivity(GameActivity activity) async {
+    final db = await database;
+    await db.insert(
+      gameActivitiesTable,
+      activity.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> insertGameActivityLesson(GameActivityLesson link) async {
+    final db = await database;
+    await db.insert(
+      gameActivityLessonsTable,
+      link.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> insertStudentActivity(StudentActivity activity) async {
+    final db = await database;
+    await db.insert(
+      studentActivitiesTable,
+      activity.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
