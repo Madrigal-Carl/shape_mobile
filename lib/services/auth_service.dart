@@ -11,6 +11,9 @@ import 'package:shape_mobile/models/VideoModel.dart';
 import 'package:shape_mobile/models/GameActivityModel.dart';
 import 'package:shape_mobile/models/GameActivityLessonModel.dart';
 import 'package:shape_mobile/models/StudentActivityModel.dart';
+import 'package:shape_mobile/models/FeedModel.dart';
+import 'package:shape_mobile/models/AwardModel.dart';
+import 'package:shape_mobile/models/StudentAwardModel.dart';
 
 class ApiException implements Exception {
   final String message;
@@ -48,6 +51,9 @@ class AuthService {
       final gameActivityLessonsJson =
           dataWrapper['game_activity_lessons'] ?? [];
       final studentActivitiesJson = dataWrapper['student_activities'] ?? [];
+      final feedsJson = dataWrapper['feeds'] ?? [];
+      final awardsJson = dataWrapper['awards'] ?? [];
+      final studentAwardsJson = dataWrapper['student_awards'] ?? [];
 
       // ✅ Download media (image/video) and replace path with local file path
       onProgress?.call("Downloading...");
@@ -78,6 +84,17 @@ class AuthService {
             }
 
             videoJson['thumbnail'] = localThumbPath;
+          }
+        }
+
+        for (final awardJson in awardsJson) {
+          final pathUrl = awardJson['path'];
+          if (pathUrl != null && pathUrl.isNotEmpty) {
+            final localAwardPath = await downloadFileToLocal(pathUrl);
+            if (localAwardPath == null) {
+              return false;
+            }
+            awardJson['path'] = localAwardPath;
           }
         }
       } catch (e) {
@@ -121,6 +138,20 @@ class AuthService {
       for (final saJson in studentActivitiesJson) {
         final sa = StudentActivity.fromJson(saJson);
         await AppDatabase.instance.insertStudentActivity(sa);
+      }
+
+      for (final feedJson in feedsJson) {
+        await AppDatabase.instance.insertFeed(Feed.fromJson(feedJson));
+      }
+
+      for (final awardJson in awardsJson) {
+        await AppDatabase.instance.insertAward(Award.fromJson(awardJson));
+      }
+
+      for (final saJson in studentAwardsJson) {
+        await AppDatabase.instance.insertStudentAward(
+          StudentAward.fromJson(saJson),
+        );
       }
 
       onProgress?.call("Success!");

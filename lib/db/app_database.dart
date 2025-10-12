@@ -6,6 +6,9 @@ import 'package:shape_mobile/models/VideoModel.dart';
 import 'package:shape_mobile/models/GameActivityModel.dart';
 import 'package:shape_mobile/models/GameActivityLessonModel.dart';
 import 'package:shape_mobile/models/StudentActivityModel.dart';
+import 'package:shape_mobile/models/FeedModel.dart';
+import 'package:shape_mobile/models/AwardModel.dart';
+import 'package:shape_mobile/models/StudentAwardModel.dart';
 
 class AppDatabase {
   AppDatabase._privateConstructor();
@@ -22,6 +25,9 @@ class AppDatabase {
   static const String gameActivitiesTable = 'game_activities';
   static const String gameActivityLessonsTable = 'game_activity_lessons';
   static const String studentActivitiesTable = 'student_activities';
+  static const String feedsTable = 'feeds';
+  static const String awardsTable = 'awards';
+  static const String studentAwardsTable = 'student_awards';
 
   Future<Database> get database async {
     if (_db != null) return _db!;
@@ -131,6 +137,50 @@ class AppDatabase {
         FOREIGN KEY (student_id) REFERENCES $studentsTable (id) ON DELETE CASCADE
       )
     ''');
+
+    // Feeds Table
+    await db.execute('''
+      CREATE TABLE $feedsTable (
+        id INTEGER PRIMARY KEY,
+        notifiable_id INTEGER,
+        group_name TEXT NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        created_at TEXT,
+        updated_at TEXT,
+        is_synced INTEGER DEFAULT 1,
+        FOREIGN KEY (notifiable_id) REFERENCES $studentsTable (id) ON DELETE SET NULL
+      )
+    ''');
+
+    // Awards Table
+    await db.execute('''
+      CREATE TABLE $awardsTable (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT,
+        path TEXT,
+        created_at TEXT,
+        updated_at TEXT,
+        is_synced INTEGER DEFAULT 1
+      )
+    ''');
+
+    // Student Awards Table
+    await db.execute('''
+      CREATE TABLE $studentAwardsTable (
+        id INTEGER PRIMARY KEY,
+        school_year_id INTEGER NOT NULL,
+        student_id INTEGER NOT NULL,
+        award_id INTEGER NOT NULL,
+        created_at TEXT,
+        updated_at TEXT,
+        is_synced INTEGER DEFAULT 1,
+        UNIQUE (student_id, award_id, school_year_id),
+        FOREIGN KEY (student_id) REFERENCES $studentsTable (id) ON DELETE CASCADE,
+        FOREIGN KEY (award_id) REFERENCES $awardsTable (id) ON DELETE CASCADE
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -196,6 +246,33 @@ class AppDatabase {
     await db.insert(
       studentActivitiesTable,
       activity.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> insertFeed(Feed feed) async {
+    final db = await database;
+    await db.insert(
+      feedsTable,
+      feed.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> insertAward(Award award) async {
+    final db = await database;
+    await db.insert(
+      awardsTable,
+      award.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> insertStudentAward(StudentAward studentAward) async {
+    final db = await database;
+    await db.insert(
+      studentAwardsTable,
+      studentAward.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
