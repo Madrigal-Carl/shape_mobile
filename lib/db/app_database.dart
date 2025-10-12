@@ -153,6 +153,15 @@ class AppDatabase {
     return result.map((json) => Video.fromJson(json)).toList();
   }
 
+  Future<List<Video>> fetchAllVideosSortedByLatest() async {
+    final db = await database;
+    final result = await db.query(
+      videosTable,
+      orderBy: "datetime(created_at) DESC",
+    );
+    return result.map((json) => Video.fromJson(json)).toList();
+  }
+
   /// Development helper: delete database file completely
   Future<void> deleteDatabaseFile() async {
     final databasesPath = await getDatabasesPath();

@@ -56,7 +56,7 @@ class VideoScreen extends StatelessWidget {
           spacing: 12,
           children: [
             GreetingWidget(),
-            VideoCollectionWidget(videos: videos, title: 'Educational Videos'),
+            VideoCollectionWidget(title: 'Education Videos'),
           ],
         ),
       ),

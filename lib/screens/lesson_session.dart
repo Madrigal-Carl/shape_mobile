@@ -56,10 +56,7 @@ class LessonSessionScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Column(
               children: [
-                VideoCollectionWidget(
-                  title: 'Education Videos',
-                  videos: videos,
-                ),
+                VideoCollectionWidget(title: 'Video Lessons'),
                 const SizedBox(height: 12),
                 GameCollectionWidget(
                   title: 'Gamified Activities',

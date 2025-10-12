@@ -3,6 +3,7 @@ import 'package:getwidget/getwidget.dart';
 import 'package:shape_mobile/db/app_database.dart';
 import 'package:shape_mobile/models/LessonModel.dart';
 import 'dart:math';
+import 'package:shape_mobile/utils.dart';
 
 class LessonCollectionWidget extends StatefulWidget {
   final String title;
@@ -78,7 +79,7 @@ class _LessonCollectionWidgetState extends State<LessonCollectionWidget> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
-                  Icon(Icons.menu_book_outlined, size: 100, color: Colors.grey),
+                  Icon(Icons.menu_book_sharp, size: 100, color: Colors.grey),
                   SizedBox(height: 16),
                   Text(
                     "No Lessons Yet",
@@ -144,7 +145,7 @@ class _LessonCollectionWidgetState extends State<LessonCollectionWidget> {
                               width: MediaQuery.of(context).size.width * 0.45,
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                lesson.title,
+                                toTitleCase(lesson.title),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
