@@ -9,7 +9,10 @@ import 'package:shape_mobile/db/app_database.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // For testing purposes only: Clear database and preferences on each app start
   await AppDatabase.instance.deleteDatabaseFile();
+  await PreferenceService().clearPreferences();
+
   await AppDatabase.instance.initDB();
   final tables = await AppDatabase.instance.getTables();
   debugPrint("SQLite Tables Found: $tables");

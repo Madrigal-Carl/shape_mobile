@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'preference_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shape_mobile/db/app_database.dart';
 import 'package:shape_mobile/models/StudentModel.dart';
 import 'package:shape_mobile/models/LessonModel.dart';
+import 'package:shape_mobile/models/VideoModel.dart';
 
 class ApiException implements Exception {
   final String message;
@@ -38,20 +40,43 @@ class AuthService {
       final dataWrapper = data['data'];
       final studentJson = dataWrapper['student'];
       final lessonsJson = dataWrapper['lessons'] ?? [];
-
-      String? mediaUrl = studentJson['path'];
-      String? localMediaPath;
+      final videosJson = dataWrapper['videos'] ?? [];
 
       // ✅ Download media (image/video) and replace path with local file path
-      if (mediaUrl != null && mediaUrl.isNotEmpty) {
-        onProgress?.call("Downloading...");
-        localMediaPath = await downloadFileToLocal(mediaUrl);
+      onProgress?.call("Downloading...");
+      try {
+        // ✅ Step 1: Download Student Profile
+        String? mediaUrl = studentJson['path'];
+        String? localMediaPath;
 
-        if (localMediaPath == null) {
-          throw ApiException("connection_timeout");
+        if (mediaUrl != null && mediaUrl.isNotEmpty) {
+          localMediaPath = await downloadFileToLocal(mediaUrl);
+          if (localMediaPath == null) {
+            throw ApiException("Failed to download student profile image");
+          }
+          studentJson['path'] = localMediaPath;
         }
 
-        studentJson['path'] = localMediaPath;
+        // ✅ Step 2: Download All Video Thumbnails (fail-fast)
+        int totalVideos = videosJson.length;
+        for (int i = 0; i < totalVideos; i++) {
+          final videoJson = videosJson[i];
+          final thumbnailUrl = videoJson['thumbnail'];
+
+          if (thumbnailUrl != null && thumbnailUrl.isNotEmpty) {
+            final localThumbPath = await downloadFileToLocal(thumbnailUrl);
+
+            if (localThumbPath == null) {
+              return false;
+            }
+
+            videoJson['thumbnail'] = localThumbPath;
+          }
+        }
+      } catch (e) {
+        onProgress?.call("Download failed");
+        print("❌ Stopping due to failure: $e");
+        rethrow;
       }
 
       // ✅ Save in SharedPreferences
@@ -60,7 +85,7 @@ class AuthService {
         token: data['token'],
         fullname: studentJson['fullname'],
         lrn: studentJson['lrn'],
-        avatarPath: localMediaPath,
+        avatarPath: studentJson['path'],
       );
 
       // ✅ Insert or update student in local SQLite
@@ -70,6 +95,11 @@ class AuthService {
       for (var lessonJson in lessonsJson) {
         final lesson = Lesson.fromJson(lessonJson);
         await AppDatabase.instance.insertLesson(lesson);
+      }
+
+      for (var videoJson in videosJson) {
+        final video = Video.fromJson(videoJson);
+        await AppDatabase.instance.insertVideo(video);
       }
 
       onProgress?.call("Success!");
