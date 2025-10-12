@@ -4,7 +4,6 @@ import 'package:shape_mobile/models/StudentModel.dart';
 import 'package:shape_mobile/models/LessonModel.dart';
 import 'package:shape_mobile/models/VideoModel.dart';
 import 'package:shape_mobile/models/GameActivityModel.dart';
-import 'package:shape_mobile/models/GameActivityLessonModel.dart';
 import 'package:shape_mobile/models/StudentActivityModel.dart';
 import 'package:shape_mobile/models/FeedModel.dart';
 import 'package:shape_mobile/models/AwardModel.dart';
@@ -106,20 +105,6 @@ class AppDatabase {
         created_at TEXT,
         updated_at TEXT,
         is_synced INTEGER DEFAULT 1
-      )
-    ''');
-
-    // Game Activity Lessons Table
-    await db.execute('''
-      CREATE TABLE $gameActivityLessonsTable (
-        id INTEGER PRIMARY KEY,
-        lesson_id INTEGER,
-        game_activity_id INTEGER NOT NULL,
-        created_at TEXT,
-        updated_at TEXT,
-        is_synced INTEGER DEFAULT 1,
-        FOREIGN KEY (lesson_id) REFERENCES $lessonsTable (id) ON DELETE SET NULL,
-        FOREIGN KEY (game_activity_id) REFERENCES $gameActivitiesTable (id) ON DELETE CASCADE
       )
     ''');
 
@@ -232,15 +217,6 @@ class AppDatabase {
     );
   }
 
-  Future<void> insertGameActivityLesson(GameActivityLesson link) async {
-    final db = await database;
-    await db.insert(
-      gameActivityLessonsTable,
-      link.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
   Future<void> insertStudentActivity(StudentActivity activity) async {
     final db = await database;
     await db.insert(
@@ -311,6 +287,62 @@ class AppDatabase {
   ''');
 
     return result.map((json) => Video.fromJson(json)).toList();
+  }
+
+  Future<List<Award>> fetchAllAwards() async {
+    final db = await database;
+    final result = await db.query(awardsTable);
+    return result.map((json) => Award.fromJson(json)).toList();
+  }
+
+  Future<Map<String, int>> fetchStudentSummary(int studentId) async {
+    final db = await database;
+
+    // Total lessons
+    final totalLessonsResult = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM $lessonsTable',
+    );
+    final totalLessons = Sqflite.firstIntValue(totalLessonsResult) ?? 0;
+
+    // Total activities for the student
+    final totalActivitiesResult = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM $studentActivitiesTable WHERE student_id = ?',
+      [studentId],
+    );
+    final totalActivities = Sqflite.firstIntValue(totalActivitiesResult) ?? 0;
+
+    // Completed activities
+    final completedActivitiesResult = await db.rawQuery(
+      "SELECT COUNT(*) as count FROM $studentActivitiesTable WHERE student_id = ? AND status = 'finished'",
+      [studentId],
+    );
+    final completedActivities =
+        Sqflite.firstIntValue(completedActivitiesResult) ?? 0;
+
+    // Completed lessons (all activities for a lesson are finished)
+    final completedLessonsResult = await db.rawQuery(
+      '''
+      SELECT COUNT(DISTINCT lesson_id) as count
+      FROM $studentActivitiesTable sa
+      WHERE sa.student_id = ?
+      AND NOT EXISTS (
+        SELECT 1 
+        FROM $studentActivitiesTable sa2
+        WHERE sa2.lesson_id = sa.lesson_id
+        AND sa2.student_id = sa.student_id
+        AND sa2.status != 'finished'
+      )
+    ''',
+      [studentId],
+    );
+    final completedLessons = Sqflite.firstIntValue(completedLessonsResult) ?? 0;
+
+    return {
+      'totalLessons': totalLessons,
+      'totalActivities': totalActivities,
+      'completedActivities': completedActivities,
+      'completedLessons': completedLessons,
+    };
   }
 
   /// Development helper: delete database file completely
