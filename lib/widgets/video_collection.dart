@@ -98,7 +98,7 @@ class _VideoCollectionWidgetState extends State<VideoCollectionWidget> {
             crossAxisCount: 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 18,
-            childAspectRatio: 1.4,
+            childAspectRatio: widget.lessonId == null ? 1.2 : 1.4,
             children: _videos.map((video) {
               return Material(
                 borderRadius: BorderRadius.circular(12),
@@ -149,14 +149,29 @@ class _VideoCollectionWidgetState extends State<VideoCollectionWidget> {
                       ),
                       Padding(
                         padding: const EdgeInsets.all(4),
-                        child: Text(
-                          toTitleCase(video.title),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              toTitleCase(video.title),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                            if (widget.lessonId == null)
+                              Text(
+                                toTitleCase(video.lessonTitle!),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ],

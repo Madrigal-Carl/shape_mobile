@@ -155,10 +155,13 @@ class AppDatabase {
 
   Future<List<Video>> fetchAllVideosSortedByLatest() async {
     final db = await database;
-    final result = await db.query(
-      videosTable,
-      orderBy: "datetime(created_at) DESC",
-    );
+    final result = await db.rawQuery('''
+    SELECT v.*, l.title AS lesson_title
+    FROM $videosTable v
+    INNER JOIN $lessonsTable l ON v.lesson_id = l.id
+    ORDER BY datetime(v.created_at) DESC
+  ''');
+
     return result.map((json) => Video.fromJson(json)).toList();
   }
 

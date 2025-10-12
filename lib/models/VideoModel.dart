@@ -8,6 +8,8 @@ class Video {
   final String? updatedAt;
   final int isSynced;
 
+  final String? lessonTitle;
+
   Video({
     required this.id,
     required this.lessonId,
@@ -17,6 +19,8 @@ class Video {
     this.createdAt,
     this.updatedAt,
     this.isSynced = 1,
+
+    this.lessonTitle,
   });
 
   factory Video.fromJson(Map<String, dynamic> json) {
@@ -29,6 +33,8 @@ class Video {
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
       isSynced: json['is_synced'] ?? 1,
+
+      lessonTitle: json['lesson_title'],
     );
   }
 

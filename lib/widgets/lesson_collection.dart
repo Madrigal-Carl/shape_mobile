@@ -52,7 +52,7 @@ class _LessonCollectionWidgetState extends State<LessonCollectionWidget> {
       return SizedBox(
         width: double.infinity,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 60),
+          padding: const EdgeInsets.symmetric(vertical: 150),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: const [CircularProgressIndicator()],
