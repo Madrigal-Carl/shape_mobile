@@ -36,7 +36,7 @@ class _VideoCollectionWidgetState extends State<VideoCollectionWidget> {
       videos = await AppDatabase.instance.fetchAllVideosSortedByLatest();
     }
 
-    await Future.delayed(const Duration(milliseconds: 800));
+    // await Future.delayed(const Duration(milliseconds: 800));
 
     if (!mounted) return;
     setState(() {

@@ -32,7 +32,7 @@ class _NotificationCollectionWidgetState
       orderBy: "datetime(created_at) DESC",
     );
 
-    await Future.delayed(const Duration(milliseconds: 800));
+    // await Future.delayed(const Duration(milliseconds: 800));
 
     if (!mounted) return;
 

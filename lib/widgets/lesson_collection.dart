@@ -29,7 +29,7 @@ class _LessonCollectionWidgetState extends State<LessonCollectionWidget> {
     final dbInstance = await db.database;
 
     final result = await dbInstance.query(AppDatabase.lessonsTable);
-    await Future.delayed(const Duration(milliseconds: 800));
+    // await Future.delayed(const Duration(milliseconds: 800));
 
     // ✅ Only update state if widget is still mounted
     if (!mounted) return;
