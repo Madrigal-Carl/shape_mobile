@@ -147,6 +147,7 @@ class AppDatabase {
         group_name TEXT NOT NULL,
         title TEXT NOT NULL,
         message TEXT NOT NULL,
+        is_read INTEGER DEFAULT 0,
         created_at TEXT,
         updated_at TEXT,
         is_synced INTEGER DEFAULT 1,
@@ -368,6 +369,14 @@ class AppDatabase {
       'completedActivities': completedActivities,
       'completedLessons': completedLessons,
     };
+  }
+
+  Future<int> getUnreadNotificationCount() async {
+    final db = await database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM $feedsTable WHERE is_read = 0',
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
   }
 
   /// Development helper: delete database file completely

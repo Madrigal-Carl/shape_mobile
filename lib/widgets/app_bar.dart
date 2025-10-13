@@ -5,14 +5,36 @@ import 'package:popover/popover.dart';
 import 'package:shape_mobile/services/auth_service.dart';
 import 'package:toastification/toastification.dart';
 import 'package:shape_mobile/services/preference_service.dart';
+import 'package:shape_mobile/db/app_database.dart';
 
-class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
+class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final String title;
   final bool showReturn;
 
   const CustomAppBar({super.key, required this.title, this.showReturn = false});
 
   @override
+  State<CustomAppBar> createState() => _CustomAppBarState();
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+class _CustomAppBarState extends State<CustomAppBar> {
+  int _unreadCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnreadCount();
+  }
+
+  Future<void> _loadUnreadCount() async {
+    final count = await AppDatabase.instance.getUnreadNotificationCount();
+    if (!mounted) return;
+    setState(() => _unreadCount = count);
+  }
+
   Widget build(BuildContext context) {
     final currentRoute = ModalRoute.of(context)?.settings.name;
     final String? avatarPath = PreferenceService.avatarPath;
@@ -26,8 +48,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     }
 
     return GFAppBar(
-      automaticallyImplyLeading: showReturn,
-      leading: showReturn
+      automaticallyImplyLeading: widget.showReturn,
+      leading: widget.showReturn
           ? IconButton(
               icon: Icon(Icons.arrow_back),
               color: Colors.black,
@@ -41,11 +63,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     },
             )
           : null,
-      titleSpacing: showReturn ? 0 : NavigationToolbar.kMiddleSpacing,
+      titleSpacing: widget.showReturn ? 0 : NavigationToolbar.kMiddleSpacing,
       backgroundColor: Colors.white,
       elevation: 1,
       title: Text(
-        title,
+        widget.title,
         style: const TextStyle(
           color: Colors.black87,
           fontWeight: FontWeight.w600,
@@ -63,23 +85,27 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
               onPressed: currentRoute == '/notification'
                   ? null
-                  : () {
-                      Navigator.pushNamed(context, '/notification');
+                  : () async {
+                      Navigator.pushNamed(
+                        context,
+                        '/notification',
+                      ).then((_) => _loadUnreadCount());
                     },
               type: GFButtonType.transparent,
             ),
-            const Positioned(
-              top: 10,
-              right: 2,
-              child: GFBadge(
-                shape: GFBadgeShape.circle,
-                color: Colors.red,
-                child: Text(
-                  '3',
-                  style: TextStyle(fontSize: 10, color: Colors.white),
+            if (_unreadCount > 0)
+              Positioned(
+                top: 10,
+                right: 2,
+                child: GFBadge(
+                  shape: GFBadgeShape.circle,
+                  color: Colors.red,
+                  child: Text(
+                    '$_unreadCount',
+                    style: const TextStyle(fontSize: 10, color: Colors.white),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
         const SizedBox(width: 8),
@@ -104,9 +130,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ],
     );
   }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
 class ListItems extends StatelessWidget {

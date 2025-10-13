@@ -36,10 +36,19 @@ class _NotificationCollectionWidgetState
 
     if (!mounted) return;
 
+    await _markAllAsRead();
+
     setState(() {
       _notifications = result.map((e) => Feed.fromJson(e)).toList();
       _isLoading = false;
     });
+  }
+
+  Future<void> _markAllAsRead() async {
+    final db = await AppDatabase.instance.database;
+    await db.update(AppDatabase.feedsTable, {
+      'is_read': 1,
+    }, where: 'is_read = 0');
   }
 
   @override
