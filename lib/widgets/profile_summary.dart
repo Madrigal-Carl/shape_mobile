@@ -40,7 +40,7 @@ class _ProfileSummaryWidgetState extends State<ProfileSummaryWidget> {
     final completedActivityResult = await (await db.database).rawQuery('''
       SELECT COUNT(*) as count 
       FROM ${AppDatabase.studentActivitiesTable} 
-      WHERE status = 'completed'
+      WHERE status = 'finished'
     ''');
     completedActivities = completedActivityResult.first['count'] as int? ?? 0;
 
@@ -52,7 +52,7 @@ class _ProfileSummaryWidgetState extends State<ProfileSummaryWidget> {
       JOIN ${AppDatabase.gameActivityLessonsTable} gal ON gal.lesson_id = l.id
       JOIN ${AppDatabase.studentActivitiesTable} sa ON sa.activity_lesson_id = gal.id
       GROUP BY l.id
-      HAVING SUM(CASE WHEN sa.status = 'completed' THEN 1 ELSE 0 END) = COUNT(*)
+      HAVING SUM(CASE WHEN sa.status = 'finished' THEN 1 ELSE 0 END) = COUNT(*)
     ''');
     completedLessons = completedLessonResult.length;
 

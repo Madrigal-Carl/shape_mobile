@@ -321,56 +321,6 @@ class AppDatabase {
     return result.map((json) => Award.fromJson(json)).toList();
   }
 
-  Future<Map<String, int>> fetchStudentSummary(int studentId) async {
-    final db = await database;
-
-    // Total lessons
-    final totalLessonsResult = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM $lessonsTable',
-    );
-    final totalLessons = Sqflite.firstIntValue(totalLessonsResult) ?? 0;
-
-    // Total activities for the student
-    final totalActivitiesResult = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM $studentActivitiesTable WHERE student_id = ?',
-      [studentId],
-    );
-    final totalActivities = Sqflite.firstIntValue(totalActivitiesResult) ?? 0;
-
-    // Completed activities
-    final completedActivitiesResult = await db.rawQuery(
-      "SELECT COUNT(*) as count FROM $studentActivitiesTable WHERE student_id = ? AND status = 'finished'",
-      [studentId],
-    );
-    final completedActivities =
-        Sqflite.firstIntValue(completedActivitiesResult) ?? 0;
-
-    // Completed lessons (all activities for a lesson are finished)
-    final completedLessonsResult = await db.rawQuery(
-      '''
-      SELECT COUNT(DISTINCT lesson_id) as count
-      FROM $studentActivitiesTable sa
-      WHERE sa.student_id = ?
-      AND NOT EXISTS (
-        SELECT 1 
-        FROM $studentActivitiesTable sa2
-        WHERE sa2.lesson_id = sa.lesson_id
-        AND sa2.student_id = sa.student_id
-        AND sa2.status != 'finished'
-      )
-    ''',
-      [studentId],
-    );
-    final completedLessons = Sqflite.firstIntValue(completedLessonsResult) ?? 0;
-
-    return {
-      'totalLessons': totalLessons,
-      'totalActivities': totalActivities,
-      'completedActivities': completedActivities,
-      'completedLessons': completedLessons,
-    };
-  }
-
   Future<int> getUnreadNotificationCount() async {
     final db = await database;
     final result = await db.rawQuery(
