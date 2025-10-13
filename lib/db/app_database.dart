@@ -4,6 +4,7 @@ import 'package:shape_mobile/models/StudentModel.dart';
 import 'package:shape_mobile/models/LessonModel.dart';
 import 'package:shape_mobile/models/VideoModel.dart';
 import 'package:shape_mobile/models/GameActivityModel.dart';
+import 'package:shape_mobile/models/GameActivityLessonModel.dart';
 import 'package:shape_mobile/models/StudentActivityModel.dart';
 import 'package:shape_mobile/models/FeedModel.dart';
 import 'package:shape_mobile/models/AwardModel.dart';
@@ -63,6 +64,7 @@ class AppDatabase {
         birth_date TEXT,
         disability_type TEXT,
         support_need TEXT,
+        status TEXT DEFAULT 'inactive',
         created_at TEXT,
         updated_at TEXT,
         is_synced INTEGER DEFAULT 1
@@ -105,6 +107,20 @@ class AppDatabase {
         created_at TEXT,
         updated_at TEXT,
         is_synced INTEGER DEFAULT 1
+      )
+    ''');
+
+    // Game Activity Lessons Table
+    await db.execute('''
+      CREATE TABLE $gameActivityLessonsTable (
+        id INTEGER PRIMARY KEY,
+        lesson_id INTEGER,
+        game_activity_id INTEGER NOT NULL,
+        created_at TEXT,
+        updated_at TEXT,
+        is_synced INTEGER DEFAULT 1,
+        FOREIGN KEY (lesson_id) REFERENCES $lessonsTable (id) ON DELETE SET NULL,
+        FOREIGN KEY (game_activity_id) REFERENCES $gameActivitiesTable (id) ON DELETE CASCADE
       )
     ''');
 
@@ -213,6 +229,15 @@ class AppDatabase {
     await db.insert(
       gameActivitiesTable,
       activity.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> insertGameActivityLesson(GameActivityLesson link) async {
+    final db = await database;
+    await db.insert(
+      gameActivityLessonsTable,
+      link.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }

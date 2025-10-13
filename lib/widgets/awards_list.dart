@@ -55,7 +55,7 @@ class _AwardListWidgetState extends State<AwardListWidget> {
                   color: Color(0x66D6DBED),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(14),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   spacing: 8,

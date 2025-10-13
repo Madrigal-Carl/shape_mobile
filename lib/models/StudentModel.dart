@@ -9,6 +9,7 @@ class Student {
   final String? birthDate;
   final String? disabilityType;
   final String? supportNeed;
+  final String? status;
   final String? createdAt;
   final String? updatedAt;
   final int isSynced;
@@ -26,6 +27,7 @@ class Student {
     this.birthDate,
     this.disabilityType,
     this.supportNeed,
+    this.status = 'inactive',
     this.createdAt,
     this.updatedAt,
     this.fullName,
@@ -45,6 +47,7 @@ class Student {
       birthDate: json['birth_date'],
       disabilityType: json['disability_type'],
       supportNeed: json['support_need'],
+      status: json['status'],
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
     );
@@ -62,6 +65,7 @@ class Student {
       'birth_date': birthDate,
       'disability_type': disabilityType,
       'support_need': supportNeed,
+      'status': status,
       'created_at': createdAt,
       'updated_at': updatedAt,
       'is_synced': isSynced,

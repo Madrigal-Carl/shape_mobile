@@ -107,6 +107,7 @@ class AuthService {
         fullname: studentJson['fullname'],
         lrn: studentJson['lrn'],
         avatarPath: studentJson['path'],
+        status: studentJson['status'],
       );
 
       final student = Student.fromJson(studentJson);

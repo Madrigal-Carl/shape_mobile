@@ -8,6 +8,7 @@ class PreferenceService {
   static String? fullname;
   static String? lrn;
   static String? avatarPath;
+  static String? status;
   static int? latestLessonId;
   static String? latestLessonTitle;
 
@@ -19,6 +20,7 @@ class PreferenceService {
     fullname = prefs.getString('fullname');
     lrn = prefs.getString('lrn');
     avatarPath = prefs.getString('avatarPath');
+    status = prefs.getString('status');
     latestLessonId = prefs.getInt('latest_lesson_id');
     latestLessonTitle = prefs.getString('latest_lesson_title');
   }
@@ -29,12 +31,14 @@ class PreferenceService {
     required String fullname,
     required String lrn,
     required String? avatarPath,
+    required String status,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool("isLoggedIn", true);
     await prefs.setString("token", token);
     await prefs.setString("fullname", fullname);
     await prefs.setString("lrn", lrn);
+    await prefs.setString("status", status);
 
     if (avatarPath != null) {
       await prefs.setString("avatarPath", avatarPath);
@@ -46,6 +50,7 @@ class PreferenceService {
     PreferenceService.fullname = fullname;
     PreferenceService.lrn = lrn;
     PreferenceService.avatarPath = avatarPath;
+    PreferenceService.status = status;
   }
 
   /// Load values from SharedPreferences into cache
@@ -69,6 +74,7 @@ class PreferenceService {
     PreferenceService.fullname = null;
     PreferenceService.lrn = null;
     PreferenceService.avatarPath = null;
+    PreferenceService.status = null;
   }
 
   static Future<void> saveLatestLesson(Lesson lesson) async {

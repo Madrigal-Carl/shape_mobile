@@ -6,6 +6,7 @@ import 'package:shape_mobile/widgets/awards_list.dart';
 import 'package:shape_mobile/widgets/recent_lesson.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:shape_mobile/services/preference_service.dart';
+import 'package:shape_mobile/utils.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -82,17 +83,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     Text('LRN: ${lrn!}'),
                     Container(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Color(0xFF7ADB37),
+                        color: getStatusBackgroundColor(
+                          PreferenceService.status!,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        'Active',
-                        style: TextStyle(color: Colors.white),
+                        toTitleCase(PreferenceService.status!),
+                        style: TextStyle(
+                          color: getStatusTextColor(PreferenceService.status!),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
