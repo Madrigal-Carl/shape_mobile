@@ -80,9 +80,9 @@ class _VideoCollectionWidgetState extends State<VideoCollectionWidget> {
                   Icon(Icons.video_collection, size: 100, color: Colors.grey),
                   SizedBox(height: 16),
                   Text(
-                    "No Videos Yet",
+                    "No Videos Available",
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: Colors.grey,
                     ),

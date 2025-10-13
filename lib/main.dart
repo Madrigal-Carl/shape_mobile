@@ -11,8 +11,8 @@ import 'package:shape_mobile/models/LessonModel.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // For testing purposes only: Clear database and preferences on each app start
-  await AppDatabase.instance.deleteDatabaseFile();
-  await PreferenceService().clearPreferences();
+  // await AppDatabase.instance.deleteDatabaseFile();
+  // await PreferenceService().clearPreferences();
 
   await AppDatabase.instance.initDB();
   final tables = await AppDatabase.instance.getTables();

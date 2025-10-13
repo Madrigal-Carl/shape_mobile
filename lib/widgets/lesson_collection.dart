@@ -82,9 +82,9 @@ class _LessonCollectionWidgetState extends State<LessonCollectionWidget> {
                   Icon(Icons.menu_book_sharp, size: 100, color: Colors.grey),
                   SizedBox(height: 16),
                   Text(
-                    "No Lessons Yet",
+                    "No Lessons Available",
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: Colors.grey,
                     ),
