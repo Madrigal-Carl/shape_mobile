@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:shape_mobile/db/app_database.dart';
 import 'package:shape_mobile/models/LessonModel.dart';
-import 'dart:math';
 import 'package:shape_mobile/utils.dart';
+import 'package:shape_mobile/services/preference_service.dart';
 
 class LessonCollectionWidget extends StatefulWidget {
   final String title;
@@ -16,6 +16,7 @@ class LessonCollectionWidget extends StatefulWidget {
 
 class _LessonCollectionWidgetState extends State<LessonCollectionWidget> {
   List<Lesson> _lessons = [];
+  List<Map<String, dynamic>> _lessonProgress = [];
   bool _isLoading = true;
 
   @override
@@ -29,13 +30,22 @@ class _LessonCollectionWidgetState extends State<LessonCollectionWidget> {
     final dbInstance = await db.database;
 
     final result = await dbInstance.query(AppDatabase.lessonsTable);
+    final lessons = result.map((e) => Lesson.fromJson(e)).toList();
     // await Future.delayed(const Duration(milliseconds: 800));
 
-    // ✅ Only update state if widget is still mounted
+    final studentId = PreferenceService.studentId!;
+
+    List<Map<String, dynamic>> lessonsWithProgress = [];
+    for (final lesson in lessons) {
+      final progress = await db.getLessonProgress(lesson.id, studentId);
+      lessonsWithProgress.add({'lesson': lesson, 'progress': progress});
+    }
+
     if (!mounted) return;
 
     setState(() {
-      _lessons = result.map((e) => Lesson.fromJson(e)).toList();
+      _lessons = lessons;
+      _lessonProgress = lessonsWithProgress;
       _isLoading = false;
     });
   }
@@ -102,9 +112,8 @@ class _LessonCollectionWidgetState extends State<LessonCollectionWidget> {
             itemBuilder: (context, index) {
               final lesson = _lessons[index];
 
-              // Example: fake progress (replace with real field if you have one)
-              final random = Random();
-              final double progress = random.nextDouble();
+              final data = _lessonProgress[index];
+              final double progress = data['progress'] as double;
               final int progressPercent = (progress * 100).toInt();
 
               // Pick a random image

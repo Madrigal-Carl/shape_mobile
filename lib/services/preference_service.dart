@@ -4,6 +4,7 @@ import 'package:shape_mobile/models/LessonModel.dart';
 class PreferenceService {
   // 🔹 Cached values
   static bool isLoggedIn = false;
+  static int? studentId;
   static String? token;
   static String? fullname;
   static String? lrn;
@@ -16,6 +17,7 @@ class PreferenceService {
   static Future<void> loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    studentId = prefs.getInt('student_id');
     token = prefs.getString('token');
     fullname = prefs.getString('fullname');
     lrn = prefs.getString('lrn');
@@ -28,6 +30,7 @@ class PreferenceService {
   /// Save login data and cache them
   Future<void> saveLoginData({
     required String token,
+    required int studentId,
     required String fullname,
     required String lrn,
     required String? avatarPath,
@@ -35,6 +38,7 @@ class PreferenceService {
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool("isLoggedIn", true);
+    await prefs.setInt("student_id", studentId);
     await prefs.setString("token", token);
     await prefs.setString("fullname", fullname);
     await prefs.setString("lrn", lrn);
@@ -46,6 +50,7 @@ class PreferenceService {
 
     // 🔹 Update cache immediately
     PreferenceService.isLoggedIn = true;
+    PreferenceService.studentId = studentId;
     PreferenceService.token = token;
     PreferenceService.fullname = fullname;
     PreferenceService.lrn = lrn;
@@ -57,6 +62,7 @@ class PreferenceService {
   Future<void> loadCache() async {
     final prefs = await SharedPreferences.getInstance();
     PreferenceService.isLoggedIn = prefs.getBool("isLoggedIn") ?? false;
+    PreferenceService.studentId = prefs.getInt("student_id");
     PreferenceService.token = prefs.getString("token");
     PreferenceService.fullname = prefs.getString("fullname");
     PreferenceService.lrn = prefs.getString("lrn");
@@ -70,6 +76,7 @@ class PreferenceService {
 
     // 🔹 Reset cache
     PreferenceService.isLoggedIn = false;
+    PreferenceService.studentId = null;
     PreferenceService.token = null;
     PreferenceService.fullname = null;
     PreferenceService.lrn = null;

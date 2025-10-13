@@ -9,6 +9,7 @@ import 'package:shape_mobile/models/StudentModel.dart';
 import 'package:shape_mobile/models/LessonModel.dart';
 import 'package:shape_mobile/models/VideoModel.dart';
 import 'package:shape_mobile/models/GameActivityModel.dart';
+import 'package:shape_mobile/models/GameActivityLessonModel.dart';
 import 'package:shape_mobile/models/StudentActivityModel.dart';
 import 'package:shape_mobile/models/FeedModel.dart';
 import 'package:shape_mobile/models/AwardModel.dart';
@@ -47,6 +48,8 @@ class AuthService {
       final lessonsJson = dataWrapper['lessons'] ?? [];
       final videosJson = dataWrapper['videos'] ?? [];
       final gameActivitiesJson = dataWrapper['game_activities'] ?? [];
+      final gameActivityLessonsJson =
+          dataWrapper['game_activity_lessons'] ?? [];
       final studentActivitiesJson = dataWrapper['student_activities'] ?? [];
       final feedsJson = dataWrapper['feeds'] ?? [];
       final awardsJson = dataWrapper['awards'] ?? [];
@@ -104,6 +107,7 @@ class AuthService {
       onProgress?.call("Saving data locally...");
       await _prefs.saveLoginData(
         token: data['token'],
+        studentId: studentJson['id'],
         fullname: studentJson['fullname'],
         lrn: studentJson['lrn'],
         avatarPath: studentJson['path'],
@@ -126,6 +130,11 @@ class AuthService {
       for (final gameJson in gameActivitiesJson) {
         final game = GameActivity.fromJson(gameJson);
         await AppDatabase.instance.insertGameActivity(game);
+      }
+
+      for (final galJson in gameActivityLessonsJson) {
+        final gal = GameActivityLesson.fromJson(galJson);
+        await AppDatabase.instance.insertGameActivityLesson(gal);
       }
 
       for (final saJson in studentActivitiesJson) {

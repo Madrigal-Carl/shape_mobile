@@ -279,17 +279,38 @@ class AppDatabase {
     );
   }
 
-  Future<Lesson?> fetchLatestLesson() async {
+  Future<Lesson?> fetchLatestLesson({int? studentId}) async {
     final db = await database;
-    final result = await db.query(
-      lessonsTable,
-      orderBy: "datetime(created_at) DESC",
-      limit: 1,
+
+    // 🧩 Make sure we have a studentId
+    if (studentId == null) return null;
+
+    // Query to get the latest lesson that is NOT fully completed
+    final result = await db.rawQuery(
+      '''
+    SELECT l.*
+    FROM $lessonsTable l
+    LEFT JOIN (
+      SELECT gal.lesson_id,
+             COUNT(gal.id) AS total,
+             SUM(CASE WHEN sa.status = 'finished' THEN 1 ELSE 0 END) AS completed
+      FROM $gameActivityLessonsTable gal
+      LEFT JOIN $studentActivitiesTable sa
+        ON gal.id = sa.activity_lesson_id
+       AND sa.student_id = ?
+      GROUP BY gal.lesson_id
+    ) AS prog ON prog.lesson_id = l.id
+    WHERE (prog.completed IS NULL OR prog.completed < prog.total)
+    ORDER BY datetime(l.created_at) DESC
+    LIMIT 1
+  ''',
+      [studentId],
     );
 
     if (result.isNotEmpty) {
       return Lesson.fromJson(result.first);
     }
+
     return null;
   }
 
@@ -327,6 +348,49 @@ class AppDatabase {
       'SELECT COUNT(*) as count FROM $feedsTable WHERE is_read = 0',
     );
     return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  Future<double> getLessonProgress(int lessonId, int studentId) async {
+    final db = await database;
+
+    // Count all activities linked to this lesson
+    final totalResult = await db.rawQuery(
+      '''
+    SELECT COUNT(*) as total
+    FROM ${AppDatabase.gameActivityLessonsTable}
+    WHERE lesson_id = ?
+    ''',
+      [lessonId],
+    );
+
+    final totalActivities = totalResult.first['total'] as int? ?? 0;
+    if (totalActivities == 0) {
+      print("⚠️ No activities found for lesson $lessonId");
+      return 0.0;
+    }
+
+    // Count finished activities for this student and lesson
+    final completedResult = await db.rawQuery(
+      '''
+    SELECT COUNT(*) as completed
+    FROM ${AppDatabase.studentActivitiesTable} sa
+    JOIN ${AppDatabase.gameActivityLessonsTable} gal
+      ON sa.activity_lesson_id = gal.id
+    WHERE gal.lesson_id = ?
+      AND sa.student_id = ?
+      AND sa.status = 'finished'
+    ''',
+      [lessonId, studentId],
+    );
+
+    final completedActivities = completedResult.first['completed'] as int? ?? 0;
+
+    print(
+      "📘 Lesson $lessonId | Student $studentId → $completedActivities / $totalActivities completed",
+    );
+
+    final progress = completedActivities / totalActivities;
+    return progress.clamp(0.0, 1.0);
   }
 
   /// Development helper: delete database file completely

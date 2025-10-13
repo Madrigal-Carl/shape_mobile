@@ -41,14 +41,24 @@ class _RecentLessonWidgetState extends State<RecentLessonWidget> {
   /// Fetch the latest lesson from DB in background
   Future<void> _fetchLatestLessonFromDB() async {
     try {
-      final latestLesson = await AppDatabase.instance.fetchLatestLesson();
+      final studentId = PreferenceService.studentId;
+      if (studentId == null) return;
+
+      final latestLesson = await AppDatabase.instance.fetchLatestLesson(
+        studentId: studentId,
+      );
+
       if (latestLesson != null) {
         setState(() {
           _latestLesson = latestLesson;
           _isLoading = false;
         });
+
         // Update cache
         await PreferenceService.saveLatestLesson(latestLesson);
+      } else {
+        setState(() => _isLoading = false);
+        debugPrint("✅ All lessons completed or none found.");
       }
     } catch (e) {
       debugPrint("Error fetching latest lesson: $e");
