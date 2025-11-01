@@ -9,6 +9,7 @@ import 'package:shape_mobile/models/StudentActivityModel.dart';
 import 'package:shape_mobile/models/FeedModel.dart';
 import 'package:shape_mobile/models/AwardModel.dart';
 import 'package:shape_mobile/models/StudentAwardModel.dart';
+import 'package:shape_mobile/games/game_registry.dart';
 
 class AppDatabase {
   AppDatabase._privateConstructor();
@@ -399,6 +400,125 @@ class AppDatabase {
     final path = join(databasesPath, _dbName);
     await deleteDatabase(path);
     _db = null;
+  }
+
+  Future<List<GameActivity>> fetchRegisteredGameActivities() async {
+    final db = await database;
+
+    // Get all active games from your table
+    final result = await db.query(AppDatabase.gameActivitiesTable);
+
+    final allGames = result.map((e) => GameActivity.fromJson(e)).toList();
+
+    // Filter out games that are not in GameRegistry
+    final registeredIds = GameRegistry.allGameIds.toSet();
+    final filtered = allGames
+        .where((g) => registeredIds.contains(g.id))
+        .toList();
+
+    return filtered;
+  }
+
+  Future<List<Map<String, dynamic>>> fetchGamesWithLessonTitles() async {
+    final db = await database;
+
+    final result = await db.rawQuery('''
+    SELECT 
+      ga.*, 
+      l.title AS lesson_title, 
+      l.id AS lesson_id
+    FROM $gameActivityLessonsTable gal
+    INNER JOIN $gameActivitiesTable ga 
+      ON gal.game_activity_id = ga.id
+    INNER JOIN $lessonsTable l 
+      ON gal.lesson_id = l.id
+  ''');
+
+    final registeredIds = GameRegistry.allGameIds.toSet();
+
+    return result
+        .where((row) => registeredIds.contains(row['id']))
+        .map(
+          (row) => {
+            'game': GameActivity.fromJson(row),
+            'lesson_title': row['lesson_title'],
+            'lesson_id': row['lesson_id'],
+          },
+        )
+        .toList();
+  }
+
+  Future<List<Map<String, dynamic>>> fetchGamesWithLessonTitlesByLessonId(
+    int lessonId,
+  ) async {
+    final db = await database;
+
+    final result = await db.rawQuery(
+      '''
+    SELECT 
+      ga.*, 
+      l.title AS lesson_title, 
+      l.id AS lesson_id
+    FROM $gameActivityLessonsTable gal
+    INNER JOIN $gameActivitiesTable ga 
+      ON gal.game_activity_id = ga.id
+    INNER JOIN $lessonsTable l 
+      ON gal.lesson_id = l.id
+    WHERE gal.lesson_id = ?
+  ''',
+      [lessonId],
+    );
+
+    final registeredIds = GameRegistry.allGameIds.toSet();
+
+    return result
+        .where((row) => registeredIds.contains(row['id']))
+        .map(
+          (row) => {
+            'game': GameActivity.fromJson(row),
+            'lesson_title': row['lesson_title'],
+            'lesson_id': row['lesson_id'],
+          },
+        )
+        .toList();
+  }
+
+  /// Fetch the GameActivityLesson (linking record) by lesson and game ID
+  Future<Map<String, dynamic>?> fetchGameLessonLink(
+    int lessonId,
+    int gameId,
+  ) async {
+    final db = await database;
+    final result = await db.rawQuery(
+      '''
+      SELECT id FROM $gameActivityLessonsTable
+      WHERE lesson_id = ? AND game_activity_id = ?
+      LIMIT 1
+    ''',
+      [lessonId, gameId],
+    );
+
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  /// Fetch a StudentActivity for this student + game lesson link
+  Future<Map<String, dynamic>?> fetchStudentGameActivity({
+    required int studentId,
+    required int activityLessonId,
+  }) async {
+    final db = await database;
+    final result = await db.rawQuery(
+      '''
+      SELECT * FROM $studentActivitiesTable
+      WHERE student_id = ?
+        AND activity_lesson_id = ?
+        AND activity_lesson_type = 'game'
+      LIMIT 1
+    ''',
+      [studentId, activityLessonId],
+    );
+
+    return result.isNotEmpty ? result.first : null;
   }
 
   /// List of table names (ignores SQLite internal tables)

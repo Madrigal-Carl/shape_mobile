@@ -47,29 +47,6 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> games = [
-      {
-        "image": "assets/flutter/games/find_items.png",
-        "title": "Find the items",
-        "subtitle": "Lesson 1",
-      },
-      {
-        "image": "assets/flutter/games/puzzle.png",
-        "title": "Puzzle",
-        "subtitle": "Lesson 1",
-      },
-      {
-        "image": "assets/flutter/games/coloring.png",
-        "title": "Creative Coloring",
-        "subtitle": "Lesson 1",
-      },
-      {
-        "image": "assets/flutter/games/trace.png",
-        "title": "Trace the alphabet",
-        "subtitle": "Lesson 1",
-      },
-    ];
-
     if (isLoading || lesson == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -88,8 +65,7 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
                 const SizedBox(height: 12),
                 GameCollectionWidget(
                   title: 'Gamified Activities',
-                  games: games,
-                  showSubtitle: true,
+                  lessonId: lesson!.id,
                 ),
               ],
             ),

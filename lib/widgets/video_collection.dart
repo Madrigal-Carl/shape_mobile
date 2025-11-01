@@ -148,7 +148,7 @@ class _VideoCollectionWidgetState extends State<VideoCollectionWidget> {
                         ],
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(4),
+                        padding: const EdgeInsets.symmetric(horizontal: 6.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

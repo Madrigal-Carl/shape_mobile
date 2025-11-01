@@ -32,7 +32,7 @@ class HomeScreen extends StatelessWidget {
             children: [
               const GreetingWidget(),
               const RecentLessonWidget(),
-              GameCollectionWidget(games: games, title: 'Casual Games'),
+              // GameCollectionWidget(games: games, title: 'Casual Games'),
             ],
           ),
         ),
