@@ -394,35 +394,13 @@ class AppDatabase {
     return progress.clamp(0.0, 1.0);
   }
 
-  /// Development helper: delete database file completely
-  Future<void> deleteDatabaseFile() async {
-    final databasesPath = await getDatabasesPath();
-    final path = join(databasesPath, _dbName);
-    await deleteDatabase(path);
-    _db = null;
-  }
-
-  Future<List<GameActivity>> fetchRegisteredGameActivities() async {
+  Future<List<Map<String, dynamic>>> fetchGamesWithLessonTitles(
+    int studentId,
+  ) async {
     final db = await database;
 
-    // Get all active games from your table
-    final result = await db.query(AppDatabase.gameActivitiesTable);
-
-    final allGames = result.map((e) => GameActivity.fromJson(e)).toList();
-
-    // Filter out games that are not in GameRegistry
-    final registeredIds = GameRegistry.allGameIds.toSet();
-    final filtered = allGames
-        .where((g) => registeredIds.contains(g.id))
-        .toList();
-
-    return filtered;
-  }
-
-  Future<List<Map<String, dynamic>>> fetchGamesWithLessonTitles() async {
-    final db = await database;
-
-    final result = await db.rawQuery('''
+    final result = await db.rawQuery(
+      '''
     SELECT 
       ga.*, 
       l.title AS lesson_title, 
@@ -432,7 +410,14 @@ class AppDatabase {
       ON gal.game_activity_id = ga.id
     INNER JOIN $lessonsTable l 
       ON gal.lesson_id = l.id
-  ''');
+    INNER JOIN $studentActivitiesTable sa
+      ON sa.activity_lesson_id = gal.id
+    WHERE sa.student_id = ?
+      AND sa.status = 'unfinished'
+      AND sa.activity_lesson_type = 'App\\Models\\GameActivityLesson'
+  ''',
+      [studentId],
+    );
 
     final registeredIds = GameRegistry.allGameIds.toSet();
 
@@ -540,5 +525,13 @@ class AppDatabase {
     }
 
     print("🧹 All SQLite tables cleared.");
+  }
+
+  /// Development helper: delete database file completely
+  Future<void> deleteDatabaseFile() async {
+    final databasesPath = await getDatabasesPath();
+    final path = join(databasesPath, _dbName);
+    await deleteDatabase(path);
+    _db = null;
   }
 }

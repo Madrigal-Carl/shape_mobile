@@ -12,6 +12,16 @@ class GameRegistry {
       studentId: studentId,
       gameId: gameId,
     ),
+    7: (context, lessonId, studentId, gameId) => MatchManiaEntry(
+      lessonId: lessonId,
+      studentId: studentId,
+      gameId: gameId,
+    ),
+    24: (context, lessonId, studentId, gameId) => MatchManiaEntry(
+      lessonId: lessonId,
+      studentId: studentId,
+      gameId: gameId,
+    ),
   };
 
   static List<int> get allGameIds => _games.keys.toList();

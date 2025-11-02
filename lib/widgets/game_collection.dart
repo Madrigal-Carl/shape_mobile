@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shape_mobile/db/app_database.dart';
 import 'package:shape_mobile/models/GameActivityModel.dart';
+import 'package:shape_mobile/services/preference_service.dart';
 import 'package:shape_mobile/utils.dart';
 import 'package:shape_mobile/games/game_registry.dart';
 
@@ -26,8 +27,10 @@ class _GameCollectionWidgetState extends State<GameCollectionWidget> {
 
   Future<void> _fetchGames() async {
     final db = AppDatabase.instance;
+    final studentId = PreferenceService.studentId;
+
     final results = widget.lessonId == null
-        ? await db.fetchGamesWithLessonTitles()
+        ? await db.fetchGamesWithLessonTitles(studentId!)
         : await db.fetchGamesWithLessonTitlesByLessonId(widget.lessonId!);
 
     if (!mounted) return;
