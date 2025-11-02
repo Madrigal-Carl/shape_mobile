@@ -4,9 +4,19 @@ import 'package:confetti/confetti.dart';
 import 'dart:math';
 import 'animal_match_screen.dart';
 import '../overlay/how_to_play_overlay.dart';
+import 'package:shape_mobile/services/game_progress_preference.dart';
 
 class MatterMatchScreen extends StatefulWidget {
-  const MatterMatchScreen({super.key});
+  final int lessonId;
+  final int studentId;
+  final int gameId;
+
+  const MatterMatchScreen({
+    super.key,
+    required this.lessonId,
+    required this.studentId,
+    required this.gameId,
+  });
 
   @override
   State<MatterMatchScreen> createState() => _MatterMatchScreenState();
@@ -154,10 +164,16 @@ class _MatterMatchScreenState extends State<MatterMatchScreen>
 
       if (allMatched) {
         _confettiController.play();
-        Future.delayed(const Duration(milliseconds: 800), () {
+        Future.delayed(const Duration(milliseconds: 800), () async {
           if (currentSet < totalSets) {
             _loadSet(currentSet + 1);
           } else {
+            await GameProgressPreference.saveProgress(
+              studentId: widget.studentId,
+              lessonId: widget.lessonId,
+              gameId: widget.gameId,
+              subgameName: 'matter_match',
+            );
             _showFinishPopup(context);
           }
         });
@@ -457,7 +473,11 @@ class _MatterMatchScreenState extends State<MatterMatchScreen>
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const AnimalMatchScreen(),
+                              builder: (context) => AnimalMatchScreen(
+                                lessonId: widget.lessonId,
+                                studentId: widget.studentId,
+                                gameId: widget.gameId,
+                              ),
                             ),
                           );
                         },

@@ -512,7 +512,7 @@ class AppDatabase {
       SELECT * FROM $studentActivitiesTable
       WHERE student_id = ?
         AND activity_lesson_id = ?
-        AND activity_lesson_type = 'game'
+        AND activity_lesson_type = 'App\\Models\\GameActivityLesson'
       LIMIT 1
     ''',
       [studentId, activityLessonId],

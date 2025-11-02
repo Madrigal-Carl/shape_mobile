@@ -3,9 +3,19 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:confetti/confetti.dart';
 import 'dart:math';
 import '../overlay/how_to_play_overlay.dart';
+import 'package:shape_mobile/services/game_progress_preference.dart';
 
 class AnimalMatchScreen extends StatefulWidget {
-  const AnimalMatchScreen({super.key});
+  final int lessonId;
+  final int studentId;
+  final int gameId;
+
+  const AnimalMatchScreen({
+    super.key,
+    required this.lessonId,
+    required this.studentId,
+    required this.gameId,
+  });
 
   @override
   State<AnimalMatchScreen> createState() => _AnimalMatchScreenState();
@@ -250,10 +260,16 @@ class _AnimalMatchScreenState extends State<AnimalMatchScreen>
                                   _confettiController.play();
                                   Future.delayed(
                                     const Duration(milliseconds: 800),
-                                    () {
+                                    () async {
                                       if (currentSet < randomizedSets.length) {
                                         _loadSet(currentSet + 1);
                                       } else {
+                                        await GameProgressPreference.saveProgress(
+                                          studentId: widget.studentId,
+                                          lessonId: widget.lessonId,
+                                          gameId: widget.gameId,
+                                          subgameName: 'animal_match',
+                                        );
                                         _showFinishPopup(context);
                                       }
                                     },

@@ -3,13 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'screens/home_screen.dart';
 
-void main() {
-  runApp(const MaterialApp(home: MatchManiaRoot()));
-}
-
-// ✅ This replaces `MatchManiaApp`
 class MatchManiaRoot extends StatefulWidget {
-  const MatchManiaRoot({super.key});
+  final int lessonId;
+  final int studentId;
+  final int gameId;
+
+  const MatchManiaRoot({
+    super.key,
+    required this.lessonId,
+    required this.studentId,
+    required this.gameId,
+  });
 
   @override
   State<MatchManiaRoot> createState() => _MatchManiaRootState();
@@ -51,6 +55,10 @@ class _MatchManiaRootState extends State<MatchManiaRoot>
 
   @override
   Widget build(BuildContext context) {
-    return const HomeScreen();
+    return HomeScreen(
+      lessonId: widget.lessonId,
+      studentId: widget.studentId,
+      gameId: widget.gameId,
+    );
   }
 }

@@ -3,7 +3,16 @@ import 'game_selection_screen.dart';
 import '../overlay/how_to_play_overlay.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final int lessonId;
+  final int studentId;
+  final int gameId;
+
+  const HomeScreen({
+    super.key,
+    required this.lessonId,
+    required this.studentId,
+    required this.gameId,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -56,7 +65,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const GameSelectionScreen(),
+                        builder: (context) => GameSelectionScreen(
+                          lessonId: widget.lessonId,
+                          studentId: widget.studentId,
+                          gameId: widget.gameId,
+                        ),
                       ),
                     );
                   }, width: 280),

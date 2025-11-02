@@ -6,14 +6,13 @@ import 'package:toastification/toastification.dart';
 import 'match_mania/entry.dart';
 
 class GameRegistry {
-  static final Map<int, WidgetBuilder> _games = {
-    4: (context) => const MatchManiaEntry(),
+  static final Map<int, Widget Function(BuildContext, int, int, int)> _games = {
+    4: (context, lessonId, studentId, gameId) => MatchManiaEntry(
+      lessonId: lessonId,
+      studentId: studentId,
+      gameId: gameId,
+    ),
   };
-
-  static Widget? getGameById(BuildContext context, int id) {
-    final builder = _games[id];
-    return builder != null ? builder(context) : null;
-  }
 
   static List<int> get allGameIds => _games.keys.toList();
 
@@ -25,7 +24,7 @@ class GameRegistry {
   }) async {
     final db = AppDatabase.instance;
 
-    // 🔹 Step 1: Get logged-in student ID from cached preference
+    // 🔹 Step 1: Get logged-in student ID
     final studentId = PreferenceService.studentId;
     if (studentId == null) {
       toastification.showError(
@@ -51,7 +50,7 @@ class GameRegistry {
 
     final linkId = link['id'] as int;
 
-    // 🔹 Step 3: Check the student's existing activity
+    // 🔹 Step 3: Check student’s previous activity
     final studentActivityMap = await db.fetchStudentGameActivity(
       studentId: studentId,
       activityLessonId: linkId,
@@ -59,7 +58,6 @@ class GameRegistry {
 
     if (studentActivityMap != null) {
       final activity = StudentActivity.fromJson(studentActivityMap);
-
       if (activity.status == 'finished') {
         toastification.showError(
           context: context,
@@ -71,9 +69,10 @@ class GameRegistry {
       }
     }
 
-    // 🔹 Step 4: If allowed → open the game widget
-    final gameWidget = getGameById(context, gameId);
-    if (gameWidget != null) {
+    // 🔹 Step 4: Open the game
+    final builder = _games[gameId];
+    if (builder != null) {
+      final gameWidget = builder(context, lessonId, studentId, gameId);
       Navigator.push(context, MaterialPageRoute(builder: (_) => gameWidget));
     } else {
       toastification.showError(

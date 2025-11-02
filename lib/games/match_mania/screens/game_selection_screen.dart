@@ -3,7 +3,16 @@ import 'animal_match_screen.dart';
 import 'matter_match_screen.dart';
 
 class GameSelectionScreen extends StatelessWidget {
-  const GameSelectionScreen({super.key});
+  final int lessonId;
+  final int studentId;
+  final int gameId;
+
+  const GameSelectionScreen({
+    super.key,
+    required this.lessonId,
+    required this.studentId,
+    required this.gameId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +68,11 @@ class GameSelectionScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const MatterMatchScreen(),
+                            builder: (context) => MatterMatchScreen(
+                              lessonId: lessonId,
+                              studentId: studentId,
+                              gameId: gameId,
+                            ),
                           ),
                         );
                       },
@@ -74,7 +87,11 @@ class GameSelectionScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const AnimalMatchScreen(),
+                            builder: (context) => AnimalMatchScreen(
+                              lessonId: lessonId,
+                              studentId: studentId,
+                              gameId: gameId,
+                            ),
                           ),
                         );
                       },

@@ -1,11 +1,32 @@
 import 'package:flutter/material.dart';
-import 'main.dart' as match_mania;
+import 'package:shape_mobile/services/game_progress_preference.dart';
+import 'main.dart';
 
 class MatchManiaEntry extends StatelessWidget {
-  const MatchManiaEntry({super.key});
+  final int lessonId;
+  final int studentId;
+  final int gameId;
+
+  const MatchManiaEntry({
+    super.key,
+    required this.lessonId,
+    required this.studentId,
+    required this.gameId,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: match_mania.MatchManiaRoot());
+    GameProgressPreference.registerSubgames(
+      studentId: studentId,
+      lessonId: lessonId,
+      gameId: gameId,
+      subgames: ['animal_match', 'matter_match'],
+    );
+
+    return MatchManiaRoot(
+      lessonId: lessonId,
+      studentId: studentId,
+      gameId: gameId,
+    );
   }
 }
