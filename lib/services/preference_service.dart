@@ -12,6 +12,7 @@ class PreferenceService {
   static String? status;
   static int? latestLessonId;
   static String? latestLessonTitle;
+  static String? lastSyncTime;
 
   /// Load saved preferences on app startup
   static Future<void> loadPreferences() async {
@@ -25,6 +26,7 @@ class PreferenceService {
     status = prefs.getString('status');
     latestLessonId = prefs.getInt('latest_lesson_id');
     latestLessonTitle = prefs.getString('latest_lesson_title');
+    lastSyncTime = prefs.getString('last_sync_time');
   }
 
   /// Save login data and cache them
@@ -67,6 +69,20 @@ class PreferenceService {
     PreferenceService.fullname = prefs.getString("fullname");
     PreferenceService.lrn = prefs.getString("lrn");
     PreferenceService.avatarPath = prefs.getString("avatarPath");
+  }
+
+  /// Save the current time as last sync
+  static Future<void> saveLastSyncTime(DateTime time) async {
+    final prefs = await SharedPreferences.getInstance();
+    final formatted = time.toIso8601String();
+    await prefs.setString('last_sync_time', formatted);
+    lastSyncTime = formatted;
+  }
+
+  /// Load last sync time (on app start)
+  static Future<void> loadLastSyncTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    lastSyncTime = prefs.getString('last_sync_time');
   }
 
   /// Clear preferences and reset cache

@@ -157,6 +157,7 @@ class AuthService {
       }
 
       onProgress?.call("Success!");
+      await PreferenceService.saveLastSyncTime(DateTime.now());
       return true;
     } else {
       throw ApiException(data['message'] ?? "Login failed");
