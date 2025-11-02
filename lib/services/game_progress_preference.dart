@@ -116,6 +116,13 @@ class GameProgressPreference {
         whereArgs: [studentActivity!['id']],
       );
       print('🏁 Game $gameId marked finished (updated existing).');
+
+      await clearGameProgress(
+        studentId: studentId,
+        lessonId: lessonId,
+        gameId: gameId,
+      );
+      print('🧹 Cleared progress data for Game $gameId after completion.');
     }
   }
 
