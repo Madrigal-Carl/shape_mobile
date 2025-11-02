@@ -267,4 +267,88 @@ class AuthService {
       print("⚠️ Error clearing local files: $e");
     }
   }
+
+  /// Syncs all unsynced student activities (is_synced = 0) with the server
+  Future<bool> syncStudentActivities({
+    void Function(String)? onProgress,
+  }) async {
+    final db = await AppDatabase.instance.database;
+    onProgress?.call("Checking unsynced activities...");
+    final unsyncedActivities = await db.query(
+      'student_activities',
+      where: 'is_synced = ?',
+      whereArgs: [0],
+    );
+
+    if (unsyncedActivities.isEmpty) {
+      onProgress?.call("No unsynced activities found.");
+      await Future.delayed(const Duration(seconds: 1));
+      return true;
+    }
+
+    final activities = unsyncedActivities.map((activity) {
+      return {
+        'student_id': activity['student_id'],
+        'activity_lesson_id': activity['activity_lesson_id'],
+        'activity_lesson_type': activity['activity_lesson_type'],
+        'status': activity['status'],
+        'created_at': activity['created_at'],
+        'updated_at': activity['updated_at'],
+      };
+    }).toList();
+
+    final url = Uri.parse('$baseUrl/student/sync-activity');
+    final token = PreferenceService.token;
+
+    try {
+      onProgress?.call("Uploading ${activities.length} activities...");
+
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'activities': activities}),
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw ApiException("connection_timeout"),
+          );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        onProgress?.call("Updating local data...");
+
+        for (final row in unsyncedActivities) {
+          await db.update(
+            'student_activities',
+            {'is_synced': 1},
+            where: 'id = ?',
+            whereArgs: [row['id']],
+          );
+        }
+
+        onProgress?.call("Sync complete!");
+        print('✅ Synced successfully: ${data['synced_ids']}');
+        return true;
+      } else {
+        onProgress?.call("Failed to sync activities.");
+        print('❌ Sync failed: ${response.body}');
+        throw ApiException('Failed to sync activities: ${response.body}');
+      }
+    } on ApiException catch (e) {
+      onProgress?.call(
+        e.message == "connection_timeout"
+            ? "Connection timed out. Please check your internet."
+            : e.message,
+      );
+      throw e;
+    } catch (e) {
+      onProgress?.call("Connection error.");
+      print('⚠️ Error syncing student activities: $e');
+      throw ApiException(e.toString());
+    }
+  }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:getwidget/getwidget.dart';
-import 'package:shape_mobile/services/auth_service.dart';
+import 'package:shape_mobile/services/api_service.dart';
 import 'package:shape_mobile/services/loading_modal.dart';
 import 'package:toastification/toastification.dart';
 

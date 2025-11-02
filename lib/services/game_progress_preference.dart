@@ -111,7 +111,7 @@ class GameProgressPreference {
       // Update existing record
       await database.update(
         AppDatabase.studentActivitiesTable,
-        {'status': 'finished', 'updated_at': now},
+        {'status': 'finished', 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [studentActivity!['id']],
       );

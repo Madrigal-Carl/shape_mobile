@@ -7,17 +7,12 @@ import 'match_mania/entry.dart';
 
 class GameRegistry {
   static final Map<int, Widget Function(BuildContext, int, int, int)> _games = {
-    4: (context, lessonId, studentId, gameId) => MatchManiaEntry(
+    18: (context, lessonId, studentId, gameId) => MatchManiaEntry(
       lessonId: lessonId,
       studentId: studentId,
       gameId: gameId,
     ),
-    7: (context, lessonId, studentId, gameId) => MatchManiaEntry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
-    ),
-    24: (context, lessonId, studentId, gameId) => MatchManiaEntry(
+    22: (context, lessonId, studentId, gameId) => MatchManiaEntry(
       lessonId: lessonId,
       studentId: studentId,
       gameId: gameId,

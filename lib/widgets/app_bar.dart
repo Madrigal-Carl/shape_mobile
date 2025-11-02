@@ -2,10 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:popover/popover.dart';
-import 'package:shape_mobile/services/auth_service.dart';
+import 'package:shape_mobile/services/api_service.dart';
 import 'package:toastification/toastification.dart';
 import 'package:shape_mobile/services/preference_service.dart';
 import 'package:shape_mobile/db/app_database.dart';
+import 'package:shape_mobile/services/loading_modal.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final String title;
@@ -118,7 +119,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                 bodyBuilder: (context) => const ListItems(),
                 direction: PopoverDirection.bottom,
                 width: 200,
-                height: 185,
+                height: 235,
                 arrowWidth: 16,
                 arrowHeight: 10,
               );
@@ -149,6 +150,87 @@ class ListItems extends StatelessWidget {
           leading: const Icon(Icons.settings),
           title: const Text('Settings'),
           onTap: () => Navigator.pop(context),
+        ),
+        ListTile(
+          leading: const Icon(Icons.autorenew_sharp),
+          title: const Text('Update'),
+          onTap: () async {
+            FocusScope.of(context).unfocus();
+
+            final modalKey = GlobalKey<LoadingModalState>();
+            final authService = AuthService();
+
+            // ✅ Attach modal to root navigator
+            showDialog(
+              context: Navigator.of(context, rootNavigator: true).context,
+              barrierDismissible: false,
+              builder: (_) => LoadingModal(
+                key: modalKey,
+                initialMessage: "Preparing to sync...",
+              ),
+            );
+
+            // Wait for modal mount
+            await Future.delayed(const Duration(milliseconds: 300));
+
+            try {
+              final success = await authService
+                  .syncStudentActivities(
+                    onProgress: (msg) {
+                      modalKey.currentState?.updateMessage(msg);
+                    },
+                  )
+                  .timeout(const Duration(seconds: 60), onTimeout: () => false);
+              // ✅ Close modal from root navigator
+              Navigator.pop(context);
+
+              if (success) {
+                toastification.showSuccess(
+                  context: context,
+                  title: 'Activities synced successfully!',
+                  autoCloseDuration: const Duration(seconds: 5),
+                  padding: const EdgeInsets.all(10),
+                );
+                Navigator.pop(context);
+              } else {
+                toastification.showError(
+                  context: context,
+                  title: 'Sync timed out. Please check your connection.',
+                  autoCloseDuration: const Duration(seconds: 5),
+                  padding: const EdgeInsets.all(10),
+                );
+                Navigator.pop(context);
+              }
+            } on ApiException catch (e) {
+              if (context.mounted) {
+                Navigator.of(context, rootNavigator: true).pop();
+              }
+              if (context.mounted) {
+                toastification.showError(
+                  context: context,
+                  title: e.message == "connection_timeout"
+                      ? 'Connection timed out. Please check your internet.'
+                      : e.message,
+                  autoCloseDuration: const Duration(seconds: 5),
+                  padding: const EdgeInsets.all(10),
+                );
+                Navigator.pop(context);
+              }
+            } catch (e) {
+              if (context.mounted) {
+                Navigator.of(context, rootNavigator: true).pop();
+              }
+              if (context.mounted) {
+                toastification.showError(
+                  context: context,
+                  title: e.toString(),
+                  autoCloseDuration: const Duration(seconds: 5),
+                  padding: const EdgeInsets.all(10),
+                );
+                Navigator.pop(context);
+              }
+            }
+          },
         ),
         ListTile(
           leading: const Icon(Icons.logout),
