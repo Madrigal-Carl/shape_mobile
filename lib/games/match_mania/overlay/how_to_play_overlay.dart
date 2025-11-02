@@ -12,11 +12,7 @@ class HowToPlayOverlay extends StatelessWidget {
       alignment: Alignment.center,
       children: [
         // 🖤 Semi-transparent dark background
-        Positioned.fill(
-          child: Container(
-            color: Colors.black54,
-          ),
-        ),
+        Positioned.fill(child: Container(color: Colors.black54)),
 
         // 📜 Popup with how.png
         Center(
@@ -25,7 +21,7 @@ class HowToPlayOverlay extends StatelessWidget {
             children: [
               // main how.png image
               Image.asset(
-                'assets/images/how.png',
+                'assets/games/match_mania/images/how.png',
                 width: 330,
                 fit: BoxFit.contain,
               ),
@@ -37,7 +33,7 @@ class HowToPlayOverlay extends StatelessWidget {
                 child: GestureDetector(
                   onTap: onClose,
                   child: Image.asset(
-                    'assets/images/x.png',
+                    'assets/games/match_mania/images/x.png',
                     width: 40,
                   ),
                 ),

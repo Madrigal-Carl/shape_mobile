@@ -105,197 +105,211 @@ class _AnimalMatchScreenState extends State<AnimalMatchScreen>
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset('assets/images/bg.png', fit: BoxFit.cover),
-          ),
-          Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.05)),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 35,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Image.asset('assets/images/scoreph.png', height: 65),
-                          const SizedBox(width: 10),
-                          Transform.translate(
-                            offset: const Offset(-118, 0),
-                            child: Text(
-                              'Score:',
-                              style: GoogleFonts.dynaPuff(
-                                color: Colors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          _showMenuPopup();
+        }
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/games/match_mania/images/bg.png',
+                fit: BoxFit.cover,
+              ),
+            ),
+            Positioned.fill(
+              child: Container(color: Colors.black.withOpacity(0.05)),
+            ),
+            SafeArea(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 35,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Image.asset(
+                              'assets/games/match_mania/images/scoreph.png',
+                              height: 65,
+                            ),
+                            const SizedBox(width: 10),
+                            Transform.translate(
+                              offset: const Offset(-118, 0),
+                              child: Text(
+                                'Score:',
+                                style: GoogleFonts.dynaPuff(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 3),
-                          Transform.translate(
-                            offset: const Offset(-116, 0),
-                            child: Text(
-                              '$score',
-                              style: GoogleFonts.dynaPuff(
-                                color: Colors.yellowAccent,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                            const SizedBox(width: 3),
+                            Transform.translate(
+                              offset: const Offset(-116, 0),
+                              child: Text(
+                                '$score',
+                                style: GoogleFonts.dynaPuff(
+                                  color: Colors.yellowAccent,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      GestureDetector(
-                        onTap: _showMenuPopup,
-                        child: Image.asset(
-                          'assets/images/menu.png',
-                          height: 45,
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Image.asset(
-                  'assets/images/animaltitle.png',
-                  width: size.width * 0.75,
-                  fit: BoxFit.contain,
-                ),
-                Text(
-                  'Set $currentSet of ${randomizedSets.length}',
-                  style: GoogleFonts.dynaPuff(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 30),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30),
-                  child: Transform.translate(
-                    offset: Offset(_wrongShakeOffset, 0),
-                    child: GridView.builder(
-                      shrinkWrap: true,
-                      itemCount: currentTargets.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            mainAxisSpacing: 20,
-                            crossAxisSpacing: 20,
-                            childAspectRatio: 1,
+                        GestureDetector(
+                          onTap: _showMenuPopup,
+                          child: Image.asset(
+                            'assets/games/match_mania/images/menu.png',
+                            height: 45,
                           ),
-                      itemBuilder: (context, index) {
-                        final key = currentTargets.keys.elementAt(index);
-                        final label = currentTargets[key]!;
-
-                        return DragTarget<String>(
-                          builder: (context, candidateData, rejectedData) {
-                            return AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              decoration: BoxDecoration(
-                                color: matched[key]!
-                                    ? Colors.green.withOpacity(0.4)
-                                    : Colors.white.withOpacity(0.4),
-                                borderRadius: BorderRadius.circular(15),
-                                border: Border.all(
-                                  color: matched[key]!
-                                      ? Colors.green
-                                      : Colors.white,
-                                  width: 2.5,
-                                ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  label,
-                                  style: GoogleFonts.dynaPuff(
-                                    color: Colors.brown[800],
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                          onWillAccept: (data) => true,
-                          onAccept: (data) {
-                            if (data == key) {
-                              setState(() {
-                                matched[key] = true;
-                                score += 10;
-                              });
-
-                              if (allMatched) {
-                                _confettiController.play();
-                                Future.delayed(
-                                  const Duration(milliseconds: 800),
-                                  () {
-                                    if (currentSet < randomizedSets.length) {
-                                      _loadSet(currentSet + 1);
-                                    } else {
-                                      _showFinishPopup(context);
-                                    }
-                                  },
-                                );
-                              }
-                            } else {
-                              _wrongAnimController.forward(from: 0);
-                              setState(() {
-                                score = (score - 5).clamp(0, 9999);
-                              });
-                            }
-                          },
-                        );
-                      },
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 40),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 20,
-                    runSpacing: 20,
-                    children: shuffledKeys
-                        .map((key) => _buildAnimalIcon(key))
-                        .toList(),
+                  const SizedBox(height: 5),
+                  Image.asset(
+                    'assets/games/match_mania/images/animaltitle.png',
+                    width: size.width * 0.75,
+                    fit: BoxFit.contain,
                   ),
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            top: 60,
-            left: 0,
-            right: 0,
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: ConfettiWidget(
-                confettiController: _confettiController,
-                blastDirectionality: BlastDirectionality.explosive,
-                emissionFrequency: 0.05,
-                numberOfParticles: 25,
-                gravity: 0.4,
-                colors: const [
-                  Colors.red,
-                  Colors.yellow,
-                  Colors.blue,
-                  Colors.green,
-                  Colors.orange,
+                  Text(
+                    'Set $currentSet of ${randomizedSets.length}',
+                    style: GoogleFonts.dynaPuff(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    child: Transform.translate(
+                      offset: Offset(_wrongShakeOffset, 0),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        itemCount: currentTargets.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              mainAxisSpacing: 20,
+                              crossAxisSpacing: 20,
+                              childAspectRatio: 1,
+                            ),
+                        itemBuilder: (context, index) {
+                          final key = currentTargets.keys.elementAt(index);
+                          final label = currentTargets[key]!;
+
+                          return DragTarget<String>(
+                            builder: (context, candidateData, rejectedData) {
+                              return AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                decoration: BoxDecoration(
+                                  color: matched[key]!
+                                      ? Colors.green.withOpacity(0.4)
+                                      : Colors.white.withOpacity(0.4),
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(
+                                    color: matched[key]!
+                                        ? Colors.green
+                                        : Colors.white,
+                                    width: 2.5,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    label,
+                                    style: GoogleFonts.dynaPuff(
+                                      color: Colors.brown[800],
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                            onWillAccept: (data) => true,
+                            onAccept: (data) {
+                              if (data == key) {
+                                setState(() {
+                                  matched[key] = true;
+                                  score += 10;
+                                });
+
+                                if (allMatched) {
+                                  _confettiController.play();
+                                  Future.delayed(
+                                    const Duration(milliseconds: 800),
+                                    () {
+                                      if (currentSet < randomizedSets.length) {
+                                        _loadSet(currentSet + 1);
+                                      } else {
+                                        _showFinishPopup(context);
+                                      }
+                                    },
+                                  );
+                                }
+                              } else {
+                                _wrongAnimController.forward(from: 0);
+                                setState(() {
+                                  score = (score - 5).clamp(0, 9999);
+                                });
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 20,
+                      runSpacing: 20,
+                      children: shuffledKeys
+                          .map((key) => _buildAnimalIcon(key))
+                          .toList(),
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
+            Positioned(
+              top: 60,
+              left: 0,
+              right: 0,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiWidget(
+                  confettiController: _confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  emissionFrequency: 0.05,
+                  numberOfParticles: 25,
+                  gravity: 0.4,
+                  colors: const [
+                    Colors.red,
+                    Colors.yellow,
+                    Colors.blue,
+                    Colors.green,
+                    Colors.orange,
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -317,7 +331,7 @@ class _AnimalMatchScreenState extends State<AnimalMatchScreen>
                   GestureDetector(
                     onTap: () => Navigator.pop(ctx),
                     child: Image.asset(
-                      'assets/images/continue.png',
+                      'assets/games/match_mania/images/continue.png',
                       width: 250,
                       fit: BoxFit.contain,
                     ),
@@ -329,7 +343,7 @@ class _AnimalMatchScreenState extends State<AnimalMatchScreen>
                       _showHowToPlayPopup();
                     },
                     child: Image.asset(
-                      'assets/images/htp.png',
+                      'assets/games/match_mania/images/htp.png',
                       width: 250,
                       fit: BoxFit.contain,
                     ),
@@ -341,7 +355,7 @@ class _AnimalMatchScreenState extends State<AnimalMatchScreen>
                       Navigator.pop(context);
                     },
                     child: Image.asset(
-                      'assets/images/quit.png',
+                      'assets/games/match_mania/images/quit.png',
                       width: 250,
                       fit: BoxFit.contain,
                     ),
@@ -364,7 +378,10 @@ class _AnimalMatchScreenState extends State<AnimalMatchScreen>
         return Stack(
           children: [
             Positioned.fill(
-              child: Image.asset('assets/images/bg.png', fit: BoxFit.cover),
+              child: Image.asset(
+                'assets/games/match_mania/images/bg.png',
+                fit: BoxFit.cover,
+              ),
             ),
             HowToPlayOverlay(onClose: () => Navigator.pop(ctx)),
           ],
@@ -387,7 +404,7 @@ class _AnimalMatchScreenState extends State<AnimalMatchScreen>
               alignment: Alignment.center,
               children: [
                 Image.asset(
-                  'assets/images/overlay.png',
+                  'assets/games/match_mania/images/overlay.png',
                   width: 347,
                   height: 479,
                   fit: BoxFit.contain,
@@ -420,7 +437,10 @@ class _AnimalMatchScreenState extends State<AnimalMatchScreen>
                           Navigator.pop(ctx);
                           Navigator.pop(context);
                         },
-                        child: Image.asset('assets/images/home.png', width: 60),
+                        child: Image.asset(
+                          'assets/games/match_mania/images/home.png',
+                          width: 60,
+                        ),
                       ),
                       const SizedBox(width: 25),
                       GestureDetector(
@@ -432,7 +452,7 @@ class _AnimalMatchScreenState extends State<AnimalMatchScreen>
                           });
                         },
                         child: Image.asset(
-                          'assets/images/restart.png',
+                          'assets/games/match_mania/images/restart.png',
                           width: 60,
                         ),
                       ),
@@ -442,7 +462,10 @@ class _AnimalMatchScreenState extends State<AnimalMatchScreen>
                           Navigator.pop(ctx);
                           Navigator.pop(context);
                         },
-                        child: Image.asset('assets/images/next.png', width: 60),
+                        child: Image.asset(
+                          'assets/games/match_mania/images/next.png',
+                          width: 60,
+                        ),
                       ),
                     ],
                   ),
@@ -458,7 +481,7 @@ class _AnimalMatchScreenState extends State<AnimalMatchScreen>
   Widget _buildAnimalIcon(String key) {
     final isMatched = matched[key] ?? false;
     final imageWidget = Image.asset(
-      'assets/images/$key.png',
+      'assets/games/match_mania/images/$key.png',
       height: 78,
       width: 78,
     );

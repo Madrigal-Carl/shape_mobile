@@ -24,7 +24,10 @@ class GameSelectionScreen extends StatelessWidget {
         children: [
           // 🖼️ Background image
           Positioned.fill(
-            child: Image.asset('assets/images/bg.png', fit: BoxFit.cover),
+            child: Image.asset(
+              'assets/games/match_mania/images/bg.png',
+              fit: BoxFit.cover,
+            ),
           ),
 
           // 🌫️ Optional dark overlay for better contrast
@@ -42,7 +45,7 @@ class GameSelectionScreen extends StatelessWidget {
                   children: [
                     // 🔹 Logo
                     Image.asset(
-                      'assets/images/logo.png',
+                      'assets/games/match_mania/images/logo.png',
                       width: MediaQuery.of(context).size.width * 0.75,
                       fit: BoxFit.contain,
                     ),
@@ -50,31 +53,32 @@ class GameSelectionScreen extends StatelessWidget {
                     const SizedBox(height: 60),
 
                     // 🔸 Matter Match button
-                    menuButton('assets/images/matter.png', () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MatterMatchScreen(),
-                        ),
-                      );
-
-                      // Example navigation:
-                      // Navigator.push(context,
-                      //   MaterialPageRoute(builder: (_) => const MatterMatchScreen()),
-                      // );
-                    }),
+                    menuButton(
+                      'assets/games/match_mania/images/matter.png',
+                      () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MatterMatchScreen(),
+                          ),
+                        );
+                      },
+                    ),
 
                     const SizedBox(height: 25),
 
                     // 🔸 Animal Match button
-                    menuButton('assets/images/animal.png', () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AnimalMatchScreen(),
-                        ),
-                      );
-                    }),
+                    menuButton(
+                      'assets/games/match_mania/images/animal.png',
+                      () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AnimalMatchScreen(),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),

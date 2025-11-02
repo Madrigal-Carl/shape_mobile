@@ -3,11 +3,11 @@ import 'package:shape_mobile/db/app_database.dart';
 import 'package:shape_mobile/models/StudentActivityModel.dart';
 import 'package:shape_mobile/services/preference_service.dart';
 import 'package:toastification/toastification.dart';
-import 'match_mania/main.dart' as match_mania;
+import 'match_mania/entry.dart';
 
 class GameRegistry {
   static final Map<int, WidgetBuilder> _games = {
-    4: (context) => match_mania.MatchManiaApp(),
+    4: (context) => const MatchManiaEntry(),
   };
 
   static Widget? getGameById(BuildContext context, int id) {

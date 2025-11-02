@@ -36,7 +36,10 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           // 🌄 Background
           Positioned.fill(
-            child: Image.asset('assets/images/bg.png', fit: BoxFit.cover),
+            child: Image.asset(
+              'assets/games/match_mania/images/bg.png',
+              fit: BoxFit.cover,
+            ),
           ),
 
           SafeArea(
@@ -45,11 +48,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
-                    'assets/images/logo.png',
+                    'assets/games/match_mania/images/logo.png',
                     width: MediaQuery.of(context).size.width * 0.75,
                   ),
                   const SizedBox(height: 120),
-                  menuButton('assets/images/start.png', () {
+                  menuButton('assets/games/match_mania/images/start.png', () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -60,12 +63,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 15),
                   // 👇 When tapped, show overlay instead of navigating
                   menuButton(
-                    'assets/images/htp.png',
+                    'assets/games/match_mania/images/htp.png',
                     _toggleHowToPlay,
                     width: 280,
                   ),
                   const SizedBox(height: 15),
-                  menuButton('assets/images/quit.png', () {
+                  menuButton('assets/games/match_mania/images/quit.png', () {
                     showDialog(
                       context: context,
                       builder: (ctx) => AlertDialog(

@@ -187,135 +187,149 @@ class _MatterMatchScreenState extends State<MatterMatchScreen>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // 🏞️ Background
-          Positioned.fill(
-            child: Image.asset('assets/images/bg.png', fit: BoxFit.cover),
-          ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          _showMenuPopup();
+        }
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            // 🏞️ Background
+            Positioned.fill(
+              child: Image.asset(
+                'assets/games/match_mania/images/bg.png',
+                fit: BoxFit.cover,
+              ),
+            ),
 
-          SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 35,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Image.asset('assets/images/scoreph.png', height: 65),
-                          const SizedBox(width: 10),
-                          Transform.translate(
-                            offset: const Offset(-118, 0),
-                            child: Text(
-                              'Score:',
-                              style: GoogleFonts.dynaPuff(
-                                color: Colors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
+            SafeArea(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 35,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Image.asset(
+                              'assets/games/match_mania/images/scoreph.png',
+                              height: 65,
+                            ),
+                            const SizedBox(width: 10),
+                            Transform.translate(
+                              offset: const Offset(-118, 0),
+                              child: Text(
+                                'Score:',
+                                style: GoogleFonts.dynaPuff(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 3),
-                          Transform.translate(
-                            offset: const Offset(-116, 0),
-                            child: Text(
-                              '$score',
-                              style: GoogleFonts.dynaPuff(
-                                color: Colors.yellowAccent,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                            const SizedBox(width: 3),
+                            Transform.translate(
+                              offset: const Offset(-116, 0),
+                              child: Text(
+                                '$score',
+                                style: GoogleFonts.dynaPuff(
+                                  color: Colors.yellowAccent,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      GestureDetector(
-                        onTap: _showMenuPopup,
-                        child: Image.asset(
-                          'assets/images/menu.png',
-                          height: 45,
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                Image.asset(
-                  'assets/images/mattertitle.png',
-                  width: size.width * 0.75,
-                  fit: BoxFit.contain,
-                ),
-                Text(
-                  'Set $currentSet of $totalSets',
-                  style: GoogleFonts.dynaPuff(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                Transform.translate(
-                  offset: Offset(_wrongShakeOffset, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      'Solid',
-                      'Liquid',
-                      'Gas',
-                    ].map((type) => _buildBox(type)).toList(),
-                  ),
-                ),
-                const SizedBox(height: 100),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 20,
-                      runSpacing: 20,
-                      children: shuffledItems
-                          .where((item) => !placedItems.containsKey(item))
-                          .map((item) => _buildMatterIcon(item))
-                          .toList(),
+                        GestureDetector(
+                          onTap: _showMenuPopup,
+                          child: Image.asset(
+                            'assets/games/match_mania/images/menu.png',
+                            height: 45,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          // 🎊 Confetti
-          Positioned(
-            top: 60,
-            left: 0,
-            right: 0,
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: ConfettiWidget(
-                confettiController: _confettiController,
-                blastDirectionality: BlastDirectionality.explosive,
-                emissionFrequency: 0.05,
-                numberOfParticles: 25,
-                gravity: 0.4,
-                colors: const [
-                  Colors.red,
-                  Colors.yellow,
-                  Colors.blue,
-                  Colors.green,
-                  Colors.orange,
+                  Image.asset(
+                    'assets/games/match_mania/images/mattertitle.png',
+                    width: size.width * 0.75,
+                    fit: BoxFit.contain,
+                  ),
+                  Text(
+                    'Set $currentSet of $totalSets',
+                    style: GoogleFonts.dynaPuff(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  Transform.translate(
+                    offset: Offset(_wrongShakeOffset, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        'Solid',
+                        'Liquid',
+                        'Gas',
+                      ].map((type) => _buildBox(type)).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 100),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 20,
+                        runSpacing: 20,
+                        children: shuffledItems
+                            .where((item) => !placedItems.containsKey(item))
+                            .map((item) => _buildMatterIcon(item))
+                            .toList(),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
 
-          // 🧭 How To Play Overlay
-          if (_showHowToPlay) HowToPlayOverlay(onClose: _toggleHowToPlay),
-        ],
+            // 🎊 Confetti
+            Positioned(
+              top: 60,
+              left: 0,
+              right: 0,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiWidget(
+                  confettiController: _confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  emissionFrequency: 0.05,
+                  numberOfParticles: 25,
+                  gravity: 0.4,
+                  colors: const [
+                    Colors.red,
+                    Colors.yellow,
+                    Colors.blue,
+                    Colors.green,
+                    Colors.orange,
+                  ],
+                ),
+              ),
+            ),
+
+            // 🧭 How To Play Overlay
+            if (_showHowToPlay) HowToPlayOverlay(onClose: _toggleHowToPlay),
+          ],
+        ),
       ),
     );
   }
@@ -357,7 +371,7 @@ class _MatterMatchScreenState extends State<MatterMatchScreen>
 
   Widget _buildMatterIcon(String key) {
     final imageWidget = Image.asset(
-      'assets/images/$key.png',
+      'assets/games/match_mania/images/$key.png',
       height: 78,
       width: 78,
     );
@@ -385,7 +399,7 @@ class _MatterMatchScreenState extends State<MatterMatchScreen>
               alignment: Alignment.center,
               children: [
                 Image.asset(
-                  'assets/images/overlay.png',
+                  'assets/games/match_mania/images/overlay.png',
                   width: 347,
                   height: 479,
                   fit: BoxFit.contain,
@@ -418,7 +432,10 @@ class _MatterMatchScreenState extends State<MatterMatchScreen>
                           Navigator.pop(ctx);
                           Navigator.pop(context);
                         },
-                        child: Image.asset('assets/images/home.png', width: 60),
+                        child: Image.asset(
+                          'assets/games/match_mania/images/home.png',
+                          width: 60,
+                        ),
                       ),
                       const SizedBox(width: 25),
                       GestureDetector(
@@ -429,7 +446,7 @@ class _MatterMatchScreenState extends State<MatterMatchScreen>
                           });
                         },
                         child: Image.asset(
-                          'assets/images/restart.png',
+                          'assets/games/match_mania/images/restart.png',
                           width: 60,
                         ),
                       ),
@@ -444,7 +461,10 @@ class _MatterMatchScreenState extends State<MatterMatchScreen>
                             ),
                           );
                         },
-                        child: Image.asset('assets/images/next.png', width: 60),
+                        child: Image.asset(
+                          'assets/games/match_mania/images/next.png',
+                          width: 60,
+                        ),
                       ),
                     ],
                   ),
@@ -474,7 +494,7 @@ class _MatterMatchScreenState extends State<MatterMatchScreen>
                   GestureDetector(
                     onTap: () => Navigator.pop(ctx),
                     child: Image.asset(
-                      'assets/images/continue.png',
+                      'assets/games/match_mania/images/continue.png',
                       width: 250,
                       fit: BoxFit.contain,
                     ),
@@ -486,7 +506,7 @@ class _MatterMatchScreenState extends State<MatterMatchScreen>
                       _toggleHowToPlay(); // 👈 directly show overlay
                     },
                     child: Image.asset(
-                      'assets/images/htp.png',
+                      'assets/games/match_mania/images/htp.png',
                       width: 250,
                       fit: BoxFit.contain,
                     ),
@@ -498,7 +518,7 @@ class _MatterMatchScreenState extends State<MatterMatchScreen>
                       Navigator.pop(context);
                     },
                     child: Image.asset(
-                      'assets/images/quit.png',
+                      'assets/games/match_mania/images/quit.png',
                       width: 250,
                       fit: BoxFit.contain,
                     ),
