@@ -220,6 +220,13 @@ class AuthService {
       final awardsJson = data['awards'] ?? [];
       final studentAwardsJson = data['student_awards'] ?? [];
 
+      final isNewQuarter = data['new_quarter'] == true;
+
+      if (isNewQuarter) {
+        onProgress?.call("New quarter detected. Resetting local data...");
+        await db.clearAllTables();
+      }
+
       // -----------------------
       // 4️⃣ Helper: Check or download file
       // -----------------------
