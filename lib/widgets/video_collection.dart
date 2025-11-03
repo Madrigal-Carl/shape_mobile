@@ -4,6 +4,8 @@ import 'package:shape_mobile/db/app_database.dart';
 import 'package:shape_mobile/models/VideoModel.dart';
 import 'video_player_screen.dart';
 import 'package:shape_mobile/utils.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:toastification/toastification.dart';
 
 class VideoCollectionWidget extends StatefulWidget {
   final String title;
@@ -23,6 +25,29 @@ class _VideoCollectionWidgetState extends State<VideoCollectionWidget> {
   void initState() {
     super.initState();
     _fetchVideos();
+  }
+
+  Future<void> _handleVideoTap(Video video) async {
+    final url = video.url;
+
+    if (url.contains('youtube.com') || url.contains('youtu.be')) {
+      final Uri uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        toastification.showError(
+          context: context,
+          title: 'Could not open YouTube link.',
+          autoCloseDuration: const Duration(seconds: 5),
+          padding: const EdgeInsets.all(10),
+        );
+      }
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => VideoPlayerScreen(videoUrl: url)),
+      );
+    }
   }
 
   Future<void> _fetchVideos() async {
@@ -105,14 +130,7 @@ class _VideoCollectionWidgetState extends State<VideoCollectionWidget> {
                 clipBehavior: Clip.antiAlias,
                 color: Colors.white,
                 child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => VideoPlayerScreen(videoUrl: video.url),
-                      ),
-                    );
-                  },
+                  onTap: () => _handleVideoTap(video),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
