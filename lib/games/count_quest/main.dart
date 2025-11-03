@@ -60,9 +60,9 @@ class _CountQuestRootState extends State<CountQuestRoot>
   @override
   Widget build(BuildContext context) {
     return HomeScreen(
-      // lessonId: widget.lessonId,
-      // studentId: widget.studentId,
-      // gameId: widget.gameId,
+      lessonId: widget.lessonId,
+      studentId: widget.studentId,
+      gameId: widget.gameId,
     );
   }
 }

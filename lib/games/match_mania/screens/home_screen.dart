@@ -40,77 +40,99 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // 🌄 Background
-          Positioned.fill(
-            child: Image.asset(
-              'assets/games/match_mania/images/bg.png',
-              fit: BoxFit.cover,
-            ),
+    return WillPopScope(
+      onWillPop: () async {
+        final shouldQuit = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Quit'),
+            content: const Text('Are you sure you want to quit?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Yes'),
+              ),
+            ],
           ),
-
-          SafeArea(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/games/match_mania/images/logo.png',
-                    width: MediaQuery.of(context).size.width * 0.75,
-                  ),
-                  const SizedBox(height: 120),
-                  menuButton('assets/games/match_mania/images/start.png', () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => GameSelectionScreen(
-                          lessonId: widget.lessonId,
-                          studentId: widget.studentId,
-                          gameId: widget.gameId,
-                        ),
-                      ),
-                    );
-                  }, width: 280),
-                  const SizedBox(height: 15),
-                  // 👇 When tapped, show overlay instead of navigating
-                  menuButton(
-                    'assets/games/match_mania/images/htp.png',
-                    _toggleHowToPlay,
-                    width: 280,
-                  ),
-                  const SizedBox(height: 15),
-                  menuButton('assets/games/match_mania/images/quit.png', () {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text('Quit'),
-                        content: const Text('Are you sure you want to quit?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(ctx).pop(),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(ctx).pop();
-                              Navigator.of(context).maybePop();
-                            },
-                            child: const Text('Yes'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }, width: 260),
-                ],
+        );
+        return shouldQuit ?? false;
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            // 🌄 Background
+            Positioned.fill(
+              child: Image.asset(
+                'assets/games/match_mania/images/bg.png',
+                fit: BoxFit.cover,
               ),
             ),
-          ),
 
-          // 🪟 Overlay shown when _showHowToPlay = true
-          if (_showHowToPlay) HowToPlayOverlay(onClose: _toggleHowToPlay),
-        ],
+            SafeArea(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/games/match_mania/images/logo.png',
+                      width: MediaQuery.of(context).size.width * 0.75,
+                    ),
+                    const SizedBox(height: 120),
+                    menuButton('assets/games/match_mania/images/start.png', () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GameSelectionScreen(
+                            lessonId: widget.lessonId,
+                            studentId: widget.studentId,
+                            gameId: widget.gameId,
+                          ),
+                        ),
+                      );
+                    }, width: 280),
+                    const SizedBox(height: 15),
+                    // 👇 When tapped, show overlay instead of navigating
+                    menuButton(
+                      'assets/games/match_mania/images/htp.png',
+                      _toggleHowToPlay,
+                      width: 280,
+                    ),
+                    const SizedBox(height: 15),
+                    menuButton('assets/games/match_mania/images/quit.png', () {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Quit'),
+                          content: const Text('Are you sure you want to quit?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(ctx).pop();
+                                Navigator.of(context).maybePop();
+                              },
+                              child: const Text('Yes'),
+                            ),
+                          ],
+                        ),
+                      );
+                    }, width: 260),
+                  ],
+                ),
+              ),
+            ),
+
+            // 🪟 Overlay shown when _showHowToPlay = true
+            if (_showHowToPlay) HowToPlayOverlay(onClose: _toggleHowToPlay),
+          ],
+        ),
       ),
     );
   }

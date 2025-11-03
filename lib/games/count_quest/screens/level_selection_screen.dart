@@ -4,7 +4,16 @@ import 'medium_game_screen.dart';
 import 'hard_game_screen.dart';
 
 class LevelSelectionScreen extends StatelessWidget {
-  const LevelSelectionScreen({super.key});
+  final int lessonId;
+  final int studentId;
+  final int gameId;
+
+  const LevelSelectionScreen({
+    super.key,
+    required this.lessonId,
+    required this.studentId,
+    required this.gameId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +44,11 @@ class LevelSelectionScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const CountingGameScreen(),
+                          builder: (_) => CountingGameScreen(
+                            lessonId: lessonId,
+                            studentId: studentId,
+                            gameId: gameId,
+                          ),
                         ),
                       );
                     },
@@ -50,7 +63,11 @@ class LevelSelectionScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const MediumGameScreen(),
+                          builder: (_) => MediumGameScreen(
+                            lessonId: lessonId,
+                            studentId: studentId,
+                            gameId: gameId,
+                          ),
                         ),
                       );
                     },
@@ -65,7 +82,11 @@ class LevelSelectionScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const HardGameScreen(),
+                          builder: (_) => HardGameScreen(
+                            lessonId: lessonId,
+                            studentId: studentId,
+                            gameId: gameId,
+                          ),
                         ),
                       );
                     },

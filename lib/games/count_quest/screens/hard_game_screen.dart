@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math';
-import 'home_screen.dart';
+import 'package:shape_mobile/services/game_progress_preference.dart';
 
 class HardGameScreen extends StatefulWidget {
-  const HardGameScreen({super.key});
+  final int lessonId;
+  final int studentId;
+  final int gameId;
+
+  const HardGameScreen({
+    super.key,
+    required this.lessonId,
+    required this.studentId,
+    required this.gameId,
+  });
 
   @override
   State<HardGameScreen> createState() => _HardGameScreenState();
@@ -88,6 +97,12 @@ class _HardGameScreenState extends State<HardGameScreen>
       setState(() {
         score += 10;
         if (currentLevelIndex == levelOrder.length - 1) {
+          GameProgressPreference.saveProgress(
+            studentId: widget.studentId,
+            lessonId: widget.lessonId,
+            gameId: widget.gameId,
+            subgameName: 'hard',
+          );
           showOverlay = true;
         } else {
           currentLevelIndex++;
@@ -111,226 +126,244 @@ class _HardGameScreenState extends State<HardGameScreen>
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // 🌅 Background
-          Positioned.fill(
-            child: Image.asset(
-              'assets/games/count_quest/images/bg2.png',
-              fit: BoxFit.cover,
+    return WillPopScope(
+      onWillPop: () async {
+        if (showMenu) {
+          setState(() {
+            showMenu = false;
+          });
+        } else {
+          setState(() {
+            showMenu = true;
+          });
+        }
+        return false;
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            // 🌅 Background
+            Positioned.fill(
+              child: Image.asset(
+                'assets/games/count_quest/images/bg2.png',
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
 
-          SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 50),
+            SafeArea(
+              child: Column(
+                children: [
+                  const SizedBox(height: 50),
 
-                // 🧮 SCORE BAR
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Image.asset(
-                      'assets/games/count_quest/images/scoreplacholder.png',
-                      width: width * 0.55,
-                      fit: BoxFit.contain,
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(left: width * 0.20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Score: ",
-                            style: GoogleFonts.dynaPuff(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              shadows: [
-                                Shadow(
-                                  offset: const Offset(2, 2),
-                                  blurRadius: 3,
-                                  color: Colors.black.withOpacity(0.5),
-                                ),
-                              ],
-                            ),
-                          ),
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 400),
-                            transitionBuilder:
-                                (Widget child, Animation<double> animation) =>
-                                    ScaleTransition(
-                                      scale: animation,
-                                      child: child,
-                                    ),
-                            child: Text(
-                              "$score",
-                              key: ValueKey<int>(score),
+                  // 🧮 SCORE BAR
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/games/count_quest/images/scoreplacholder.png',
+                        width: width * 0.55,
+                        fit: BoxFit.contain,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: width * 0.20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Score: ",
                               style: GoogleFonts.dynaPuff(
-                                color: Colors.yellowAccent,
-                                fontSize: 20,
+                                color: Colors.white,
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 shadows: [
                                   Shadow(
                                     offset: const Offset(2, 2),
-                                    blurRadius: 4,
-                                    color: Colors.black.withOpacity(0.6),
+                                    blurRadius: 3,
+                                    color: Colors.black.withOpacity(0.5),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                        ],
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 400),
+                              transitionBuilder:
+                                  (Widget child, Animation<double> animation) =>
+                                      ScaleTransition(
+                                        scale: animation,
+                                        child: child,
+                                      ),
+                              child: Text(
+                                "$score",
+                                key: ValueKey<int>(score),
+                                style: GoogleFonts.dynaPuff(
+                                  color: Colors.yellowAccent,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  shadows: [
+                                    Shadow(
+                                      offset: const Offset(2, 2),
+                                      blurRadius: 4,
+                                      color: Colors.black.withOpacity(0.6),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
 
-                const SizedBox(height: 25),
+                  const SizedBox(height: 25),
 
-                // 🔢 Question
-                Column(
-                  children: [
-                    Image.asset(
-                      'assets/games/count_quest/images/11-20.png',
-                      width: width * 0.6,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "How many items do you see?\nPick the correct number!",
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.dynaPuff(
-                        color: Colors.white,
-                        fontSize: 16,
-                        shadows: [
-                          Shadow(
-                            offset: const Offset(2, 2),
-                            blurRadius: 3,
-                            color: Colors.black.withOpacity(0.6),
-                          ),
-                        ],
+                  // 🔢 Question
+                  Column(
+                    children: [
+                      Image.asset(
+                        'assets/games/count_quest/images/11-20.png',
+                        width: width * 0.6,
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(height: 10),
+                      Text(
+                        "How many items do you see?\nPick the correct number!",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.dynaPuff(
+                          color: Colors.white,
+                          fontSize: 16,
+                          shadows: [
+                            Shadow(
+                              offset: const Offset(2, 2),
+                              blurRadius: 3,
+                              color: Colors.black.withOpacity(0.6),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
 
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                // 🎾 Balls
-                Expanded(
-                  flex: 3,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      double ballSize = width * 0.14;
-                      double spacing = 10;
+                  // 🎾 Balls
+                  Expanded(
+                    flex: 3,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        double ballSize = width * 0.14;
+                        double spacing = 10;
 
-                      List<Widget> rows = [];
-                      List<Widget> currentRow = [];
+                        List<Widget> rows = [];
+                        List<Widget> currentRow = [];
 
-                      for (int i = 0; i < currentCount; i++) {
-                        Widget ball = ScaleTransition(
-                          scale: _scaleAnimation,
-                          child: Image.asset(
-                            'assets/games/count_quest/images/$currentBallAsset',
-                            width: ballSize,
-                          ),
-                        );
-                        currentRow.add(ball);
-
-                        if ((i + 1) % 5 == 0 || i == currentCount - 1) {
-                          rows.add(
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                for (int j = 0; j < currentRow.length; j++) ...[
-                                  if (j > 0) SizedBox(width: spacing),
-                                  currentRow[j],
-                                ],
-                              ],
+                        for (int i = 0; i < currentCount; i++) {
+                          Widget ball = ScaleTransition(
+                            scale: _scaleAnimation,
+                            child: Image.asset(
+                              'assets/games/count_quest/images/$currentBallAsset',
+                              width: ballSize,
                             ),
                           );
-                          currentRow = [];
+                          currentRow.add(ball);
+
+                          if ((i + 1) % 5 == 0 || i == currentCount - 1) {
+                            rows.add(
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  for (
+                                    int j = 0;
+                                    j < currentRow.length;
+                                    j++
+                                  ) ...[
+                                    if (j > 0) SizedBox(width: spacing),
+                                    currentRow[j],
+                                  ],
+                                ],
+                              ),
+                            );
+                            currentRow = [];
+                          }
                         }
-                      }
 
-                      return Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          for (int i = 0; i < rows.length; i++) ...[
-                            if (i > 0) const SizedBox(height: 15),
-                            rows[i],
+                        return Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            for (int i = 0; i < rows.length; i++) ...[
+                              if (i > 0) const SizedBox(height: 15),
+                              rows[i],
+                            ],
                           ],
-                        ],
-                      );
-                    },
-                  ),
-                ),
-
-                // 🪵 Choices
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 25),
-                  child: Container(
-                    width: width * 0.85,
-                    decoration: BoxDecoration(
-                      image: const DecorationImage(
-                        image: AssetImage(
-                          'assets/games/count_quest/images/wood.png',
-                        ),
-                        fit: BoxFit.fill,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.4),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: List.generate(
-                        choices.length,
-                        (index) => GestureDetector(
-                          onTap: () => checkAnswer(choices[index]),
-                          child: MouseRegion(
-                            cursor: SystemMouseCursors.click,
-                            child: Image.asset(
-                              'assets/games/count_quest/images/${choices[index]}.png',
-                              width: width * 0.17,
+                  ),
+
+                  // 🪵 Choices
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 25),
+                    child: Container(
+                      width: width * 0.85,
+                      decoration: BoxDecoration(
+                        image: const DecorationImage(
+                          image: AssetImage(
+                            'assets/games/count_quest/images/wood.png',
+                          ),
+                          fit: BoxFit.fill,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.4),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: List.generate(
+                          choices.length,
+                          (index) => GestureDetector(
+                            onTap: () => checkAnswer(choices[index]),
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Image.asset(
+                                'assets/games/count_quest/images/${choices[index]}.png',
+                                width: width * 0.17,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          // 📋 Menu button
-          Positioned(
-            top: 55,
-            right: 15,
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  showMenu = true;
-                });
-              },
-              child: Image.asset(
-                'assets/games/count_quest/images/menu.png',
-                width: 50,
+                ],
               ),
             ),
-          ),
 
-          if (showOverlay) _buildVictoryOverlay(width),
-          if (showMenu) _buildMenuOverlay(width),
-        ],
+            // 📋 Menu button
+            Positioned(
+              top: 55,
+              right: 15,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    showMenu = true;
+                  });
+                },
+                child: Image.asset(
+                  'assets/games/count_quest/images/menu.png',
+                  width: 50,
+                ),
+              ),
+            ),
+
+            if (showOverlay) _buildVictoryOverlay(width),
+            if (showMenu) _buildMenuOverlay(width),
+          ],
+        ),
       ),
     );
   }
@@ -498,10 +531,7 @@ class _HardGameScreenState extends State<HardGameScreen>
               // Quit button → back to home
               GestureDetector(
                 onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const HomeScreen()),
-                  );
+                  Navigator.of(context).pop();
                 },
                 child: Image.asset(
                   'assets/games/count_quest/images/quit.png',
