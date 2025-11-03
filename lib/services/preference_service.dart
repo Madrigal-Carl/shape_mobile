@@ -74,7 +74,11 @@ class PreferenceService {
   /// Save the current time as last sync
   static Future<void> saveLastSyncTime(DateTime time) async {
     final prefs = await SharedPreferences.getInstance();
-    final formatted = time.toIso8601String();
+
+    // Ensure it's in Asia/Manila timezone
+    final localTime = time.toLocal();
+    final formatted = localTime.toIso8601String();
+
     await prefs.setString('last_sync_time', formatted);
     lastSyncTime = formatted;
   }
@@ -86,11 +90,19 @@ class PreferenceService {
   }
 
   /// Clear preferences and reset cache
-  Future<void> clearPreferences() async {
+  Future<void> clearPreferences({bool keepLastSync = false}) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    if (keepLastSync) {
+      final lastSync = prefs.getString('last_sync_time');
+      await prefs.clear();
+      if (lastSync != null) {
+        await prefs.setString('last_sync_time', lastSync);
+      }
+    } else {
+      await prefs.clear();
+    }
 
-    // 🔹 Reset cache
+    // Reset cache
     PreferenceService.isLoggedIn = false;
     PreferenceService.studentId = null;
     PreferenceService.token = null;
