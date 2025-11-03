@@ -22,7 +22,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   Future<void> _initializePlayer() async {
     _controller = CachedVideoPlayerPlusController.networkUrl(
-      Uri.parse(widget.videoUrl),
+      Uri.parse(
+        "https://drive.google.com/uc?export=download&id=1w3AUPUrU8dnT22D8oCfSpCSx5XjRWLTm",
+      ),
+      // Uri.parse(widget.videoUrl),
     );
 
     await _controller.initialize();
