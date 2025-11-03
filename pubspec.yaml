@@ -88,6 +88,8 @@ flutter:
     - assets/games/count_quest/music/
     - assets/games/finger_addition/images/
     - assets/games/finger_addition/music/
+    - assets/games/fruit_subtraction/images/
+    - assets/games/fruit_subtraction/music/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

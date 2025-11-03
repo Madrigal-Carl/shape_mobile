@@ -6,21 +6,27 @@ import 'package:toastification/toastification.dart';
 import 'match_mania/entry.dart';
 import 'count_quest/entry.dart';
 import 'finger_addition/entry.dart';
+import 'fruit_subtraction/entry.dart';
 
 class GameRegistry {
   static final Map<int, Widget Function(BuildContext, int, int, int)> _games = {
     // 5, 8, 20
-    4: (context, lessonId, studentId, gameId) => MatchManiaEntry(
+    1: (context, lessonId, studentId, gameId) => MatchManiaEntry(
       lessonId: lessonId,
       studentId: studentId,
       gameId: gameId,
     ),
-    12: (context, lessonId, studentId, gameId) => CountQuestEntry(
+    2: (context, lessonId, studentId, gameId) => CountQuestEntry(
       lessonId: lessonId,
       studentId: studentId,
       gameId: gameId,
     ),
-    8: (context, lessonId, studentId, gameId) => FingerAdditionEntry(
+    3: (context, lessonId, studentId, gameId) => FingerAdditionEntry(
+      lessonId: lessonId,
+      studentId: studentId,
+      gameId: gameId,
+    ),
+    8: (context, lessonId, studentId, gameId) => FruitSubtractionEntry(
       lessonId: lessonId,
       studentId: studentId,
       gameId: gameId,
