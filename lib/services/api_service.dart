@@ -164,6 +164,265 @@ class AuthService {
     }
   }
 
+  Future<bool> fetchAndSyncStudentData({
+    void Function(String)? onProgress,
+  }) async {
+    final studentId = PreferenceService.studentId;
+    if (studentId == null) return false;
+
+    final db = AppDatabase.instance;
+    final lastSyncTime = PreferenceService.lastSyncTime;
+    final url = Uri.parse("$baseUrl/student/sync-all");
+    final token = PreferenceService.token;
+
+    // 1️⃣ Sync local activities first
+    onProgress?.call("Syncing local activities...");
+    final activitiesSynced = await updateStudentActivities(
+      onProgress: onProgress,
+    );
+    if (!activitiesSynced) return false;
+
+    // 2️⃣ Fetch data from server
+    onProgress?.call("Fetching updated student data...");
+    try {
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'student_id': studentId,
+              'last_sync_time': lastSyncTime,
+            }),
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw ApiException("connection_timeout"),
+          );
+      print('STATUS: ${response.statusCode}');
+      print('BODY: ${response.body}');
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode != 200 || data['success'] != true) {
+        throw ApiException(data['message'] ?? "Failed to fetch student data");
+      }
+
+      // 3️⃣ Extract JSON
+      final studentJson = data['student'];
+      final lessonsJson = data['lessons'] ?? [];
+      final videosJson = data['videos'] ?? [];
+      final gameActivitiesJson = data['game_activities'] ?? [];
+      final gameActivityLessonsJson = data['game_activity_lessons'] ?? [];
+      final studentActivitiesJson = data['student_activities'] ?? [];
+      final feedsJson = data['feeds'] ?? [];
+      final awardsJson = data['awards'] ?? [];
+      final studentAwardsJson = data['student_awards'] ?? [];
+
+      // -----------------------
+      // 4️⃣ Helper: Check or download file
+      // -----------------------
+      Future<String?> getOrDownloadFile(String? remoteUrl) async {
+        if (remoteUrl == null || remoteUrl.isEmpty) return null;
+
+        final filename = remoteUrl.split('/').last;
+        final localDir = await getApplicationDocumentsDirectory();
+        final localFilePath = '${localDir.path}/$filename';
+        final localFile = File(localFilePath);
+
+        // Reuse if exists
+        if (await localFile.exists()) return localFilePath;
+
+        // Otherwise, download
+        return await downloadFileToLocal(remoteUrl);
+      }
+
+      // -----------------------
+      // 5️⃣ Pre-download media
+      // -----------------------
+      onProgress?.call("Downloading media...");
+
+      // Student avatar
+      if (studentJson['path'] != null) {
+        studentJson['path'] =
+            await getOrDownloadFile(studentJson['path']) ?? studentJson['path'];
+      }
+
+      // Video thumbnails
+      for (final video in videosJson) {
+        if (video['thumbnail'] != null) {
+          video['thumbnail'] =
+              await getOrDownloadFile(video['thumbnail']) ?? video['thumbnail'];
+        }
+        if (video['url'] != null) {
+          video['url'] = await getOrDownloadFile(video['url']) ?? video['url'];
+        }
+      }
+
+      // Award images
+      for (final award in awardsJson) {
+        if (award['path'] != null) {
+          award['path'] =
+              await getOrDownloadFile(award['path']) ?? award['path'];
+        }
+      }
+
+      // -----------------------
+      // 6️⃣ Upsert/Delete helper with media cleanup
+      // -----------------------
+      Future<void> upsertOrDeleteWithMedia(
+        Map<String, dynamic> json,
+        Future<void> Function(Map<String, dynamic>) insert,
+        Future<void> Function(int) delete, {
+        List<String> mediaKeys = const [],
+      }) async {
+        if (json['deleted_at'] != null) {
+          // Delete local files first
+          for (final key in mediaKeys) {
+            final path = json[key] as String?;
+            if (path != null && path.isNotEmpty) {
+              final file = File(path);
+              if (await file.exists()) await file.delete();
+            }
+          }
+          await delete(json['id']);
+        } else {
+          await insert(json);
+        }
+      }
+      // -----------------------
+      // 7️⃣ Insert or delete all data
+      // -----------------------
+
+      onProgress?.call("Updating local preferences...");
+
+      // Update last sync time **before database** so cache is fresh
+      await PreferenceService.saveLastSyncTime(DateTime.now());
+
+      // Update student-specific cache immediately
+      if (studentJson['id'] != null) {
+        PreferenceService.studentId = studentJson['id'];
+      }
+      if (studentJson['fullname'] != null) {
+        PreferenceService.fullname = studentJson['fullname'];
+      }
+      if (studentJson['lrn'] != null) {
+        PreferenceService.lrn = studentJson['lrn'];
+      }
+      if (studentJson['status'] != null) {
+        PreferenceService.status = studentJson['status'];
+      }
+      if (studentJson['path'] != null) {
+        PreferenceService.avatarPath = studentJson['path'];
+      }
+      // -----------------------
+      // 8️⃣ Insert or delete all data
+      // -----------------------
+
+      onProgress?.call("Updating local database...");
+
+      // Student
+      await upsertOrDeleteWithMedia(
+        studentJson,
+        (json) => db.insertStudent(Student.fromJson(json)),
+        (id) => db.deleteStudent(id),
+        mediaKeys: ['path'],
+      );
+
+      // Lessons
+      for (final json in lessonsJson) {
+        await upsertOrDeleteWithMedia(
+          json,
+          (json) => db.insertLesson(Lesson.fromJson(json)),
+          (id) => db.deleteLesson(id),
+        );
+      }
+
+      // Videos
+      for (final json in videosJson) {
+        await upsertOrDeleteWithMedia(
+          json,
+          (json) => db.insertVideo(Video.fromJson(json)),
+          (id) => db.deleteVideo(id),
+          mediaKeys: ['thumbnail', 'url'],
+        );
+      }
+
+      // Game Activities
+      for (final json in gameActivitiesJson) {
+        await upsertOrDeleteWithMedia(
+          json,
+          (json) => db.insertGameActivity(GameActivity.fromJson(json)),
+          (id) => db.deleteGameActivity(id),
+        );
+      }
+
+      // Game Activity Lessons
+      for (final json in gameActivityLessonsJson) {
+        await upsertOrDeleteWithMedia(
+          json,
+          (json) =>
+              db.insertGameActivityLesson(GameActivityLesson.fromJson(json)),
+          (id) => db.deleteGameActivityLesson(id),
+        );
+      }
+
+      // Student Activities
+      for (final json in studentActivitiesJson) {
+        await upsertOrDeleteWithMedia(
+          json,
+          (json) => db.insertStudentActivity(StudentActivity.fromJson(json)),
+          (id) => db.deleteStudentActivity(id),
+        );
+      }
+
+      // Feeds
+      for (final json in feedsJson) {
+        await upsertOrDeleteWithMedia(
+          json,
+          (json) => db.insertFeed(Feed.fromJson(json)),
+          (id) => db.deleteFeed(id),
+        );
+      }
+
+      // Awards
+      for (final json in awardsJson) {
+        await upsertOrDeleteWithMedia(
+          json,
+          (json) => db.insertAward(Award.fromJson(json)),
+          (id) => db.deleteAward(id),
+          mediaKeys: ['path'],
+        );
+      }
+
+      // Student Awards
+      for (final json in studentAwardsJson) {
+        await upsertOrDeleteWithMedia(
+          json,
+          (json) => db.insertStudentAward(StudentAward.fromJson(json)),
+          (id) => db.deleteStudentAward(id),
+        );
+      }
+
+      // 8️⃣ Finalize
+      onProgress?.call("Sync complete!");
+      await PreferenceService.saveLastSyncTime(DateTime.now());
+      return true;
+    } on ApiException catch (e) {
+      onProgress?.call(
+        e.message == "connection_timeout"
+            ? "Connection timed out. Check your internet."
+            : e.message,
+      );
+      rethrow;
+    } catch (e) {
+      onProgress?.call("Error fetching student data");
+      print('⚠️ Error: $e');
+      throw ApiException(e.toString());
+    }
+  }
+
   /// Downloads a file (image or video) and stores it locally with streaming
   Future<String?> downloadFileToLocal(
     String fileUrl, {
@@ -270,7 +529,7 @@ class AuthService {
   }
 
   /// Syncs all unsynced student activities (is_synced = 0) with the server
-  Future<bool> syncStudentActivities({
+  Future<bool> updateStudentActivities({
     void Function(String)? onProgress,
   }) async {
     final db = await AppDatabase.instance.database;
@@ -282,10 +541,13 @@ class AuthService {
     );
 
     if (unsyncedActivities.isEmpty) {
-      onProgress?.call("No unsynced activities found.");
+      onProgress?.call("No unsynced data found.");
       await Future.delayed(const Duration(seconds: 1));
       return true;
     }
+
+    final url = Uri.parse('$baseUrl/student/sync-activity');
+    final token = PreferenceService.token;
 
     final activities = unsyncedActivities.map((activity) {
       return {
@@ -298,9 +560,6 @@ class AuthService {
       };
     }).toList();
 
-    final url = Uri.parse('$baseUrl/student/sync-activity');
-    final token = PreferenceService.token;
-
     try {
       onProgress?.call("Uploading ${activities.length} activities...");
 
@@ -311,7 +570,10 @@ class AuthService {
               'Content-Type': 'application/json',
               if (token != null) 'Authorization': 'Bearer $token',
             },
-            body: jsonEncode({'activities': activities}),
+            body: jsonEncode({
+              'student_id': PreferenceService.studentId,
+              'activities': activities,
+            }),
           )
           .timeout(
             const Duration(seconds: 10),

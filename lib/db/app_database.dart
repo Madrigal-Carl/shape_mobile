@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'dart:io';
 import 'package:shape_mobile/models/StudentModel.dart';
 import 'package:shape_mobile/models/LessonModel.dart';
 import 'package:shape_mobile/models/VideoModel.dart';
@@ -504,6 +505,104 @@ class AppDatabase {
     );
 
     return result.isNotEmpty ? result.first : null;
+  }
+
+  // -----------------------
+  // Delete Helpers
+  // -----------------------
+
+  Future<void> deleteStudent(int id) async {
+    final db = await database;
+    await db.delete(studentsTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> deleteLesson(int id) async {
+    final db = await database;
+    await db.delete(lessonsTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> deleteVideo(int id) async {
+    final db = await database;
+
+    // 1️⃣ Get the video to retrieve its local file path
+    final result = await db.query(
+      videosTable,
+      columns: ['thumbnail', 'url'],
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (result.isNotEmpty) {
+      final video = result.first;
+
+      // Delete thumbnail file if exists
+      final thumbnailPath = video['thumbnail'] as String?;
+      if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
+        final file = File(thumbnailPath);
+        if (await file.exists()) await file.delete();
+      }
+
+      // Delete video file if exists
+      final videoPath = video['url'] as String?;
+      if (videoPath != null && videoPath.isNotEmpty) {
+        final file = File(videoPath);
+        if (await file.exists()) await file.delete();
+      }
+    }
+
+    // 2️⃣ Delete the record from SQLite
+    await db.delete(videosTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> deleteGameActivity(int id) async {
+    final db = await database;
+    await db.delete(gameActivitiesTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> deleteGameActivityLesson(int id) async {
+    final db = await database;
+    await db.delete(gameActivityLessonsTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> deleteStudentActivity(int id) async {
+    final db = await database;
+    await db.delete(studentActivitiesTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> deleteFeed(int id) async {
+    final db = await database;
+    await db.delete(feedsTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> deleteAward(int id) async {
+    final db = await database;
+
+    // 1️⃣ Get the award to retrieve its local file path
+    final result = await db.query(
+      awardsTable,
+      columns: ['path'],
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (result.isNotEmpty) {
+      final award = result.first;
+
+      // Delete award file if exists
+      final path = award['path'] as String?;
+      if (path != null && path.isNotEmpty) {
+        final file = File(path);
+        if (await file.exists()) await file.delete();
+      }
+    }
+
+    // 2️⃣ Delete the record from SQLite
+    await db.delete(awardsTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> deleteStudentAward(int id) async {
+    final db = await database;
+    await db.delete(studentAwardsTable, where: 'id = ?', whereArgs: [id]);
   }
 
   /// List of table names (ignores SQLite internal tables)

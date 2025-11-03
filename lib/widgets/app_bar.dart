@@ -175,7 +175,7 @@ class ListItems extends StatelessWidget {
 
             try {
               final success = await authService
-                  .syncStudentActivities(
+                  .fetchAndSyncStudentData(
                     onProgress: (msg) {
                       modalKey.currentState?.updateMessage(msg);
                     },
