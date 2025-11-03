@@ -47,7 +47,6 @@ dependencies:
   path_provider: ^2.1.5
   cached_video_player_plus: ^3.0.3
   video_player: ^2.10.0
-
   google_fonts: ^6.1.0
   confetti: ^0.7.0
   audioplayers: ^6.0.0
@@ -85,6 +84,8 @@ flutter:
     - assets/flutter/videos/
     - assets/games/match_mania/images/
     - assets/games/match_mania/music/
+    - assets/games/count_quest/images/
+    - assets/games/count_quest/music/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -4,15 +4,17 @@ import 'package:shape_mobile/models/StudentActivityModel.dart';
 import 'package:shape_mobile/services/preference_service.dart';
 import 'package:toastification/toastification.dart';
 import 'match_mania/entry.dart';
+import 'count_quest/entry.dart';
 
 class GameRegistry {
   static final Map<int, Widget Function(BuildContext, int, int, int)> _games = {
-    18: (context, lessonId, studentId, gameId) => MatchManiaEntry(
+    // 5, 8, 20
+    4: (context, lessonId, studentId, gameId) => MatchManiaEntry(
       lessonId: lessonId,
       studentId: studentId,
       gameId: gameId,
     ),
-    22: (context, lessonId, studentId, gameId) => MatchManiaEntry(
+    8: (context, lessonId, studentId, gameId) => CountQuestEntry(
       lessonId: lessonId,
       studentId: studentId,
       gameId: gameId,
