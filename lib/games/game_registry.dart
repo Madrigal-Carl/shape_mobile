@@ -5,6 +5,7 @@ import 'package:shape_mobile/services/preference_service.dart';
 import 'package:toastification/toastification.dart';
 import 'match_mania/entry.dart';
 import 'count_quest/entry.dart';
+import 'finger_addition/entry.dart';
 
 class GameRegistry {
   static final Map<int, Widget Function(BuildContext, int, int, int)> _games = {
@@ -14,7 +15,12 @@ class GameRegistry {
       studentId: studentId,
       gameId: gameId,
     ),
-    8: (context, lessonId, studentId, gameId) => CountQuestEntry(
+    12: (context, lessonId, studentId, gameId) => CountQuestEntry(
+      lessonId: lessonId,
+      studentId: studentId,
+      gameId: gameId,
+    ),
+    8: (context, lessonId, studentId, gameId) => FingerAdditionEntry(
       lessonId: lessonId,
       studentId: studentId,
       gameId: gameId,

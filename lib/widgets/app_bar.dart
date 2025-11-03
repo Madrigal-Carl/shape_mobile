@@ -36,6 +36,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
     setState(() => _unreadCount = count);
   }
 
+  @override
   Widget build(BuildContext context) {
     final currentRoute = ModalRoute.of(context)?.settings.name;
     final String? avatarPath = PreferenceService.avatarPath;
