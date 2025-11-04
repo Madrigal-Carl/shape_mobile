@@ -7,9 +7,21 @@ import 'package:shape_mobile/screens/lesson_session.dart';
 import 'package:shape_mobile/services/preference_service.dart';
 import 'package:shape_mobile/db/app_database.dart';
 import 'package:shape_mobile/models/LessonModel.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // final prefs = await SharedPreferences.getInstance();
+  // final gameKeys = prefs
+  //     .getKeys()
+  //     .where((key) => key.startsWith('game_progress_'))
+  //     .toList();
+
+  // for (final key in gameKeys) {
+  //   await prefs.remove(key);
+  // }
+  // debugPrint("🧹 Cleared all 'game_progress_' preferences (fresh test).");
+
   // For testing purposes only: Clear database and preferences on each app start
   // await AppDatabase.instance.deleteDatabaseFile();
   // await PreferenceService().clearPreferences();

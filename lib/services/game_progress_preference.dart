@@ -1,10 +1,11 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shape_mobile/db/app_database.dart';
 
 class GameProgressPreference {
   static const _prefix = 'game_progress_';
 
-  /// Register all subgames for a given lesson, student, and game
+  /// Registers all subgames for a specific student, lesson, and game.
   static Future<void> registerSubgames({
     required int studentId,
     required int lessonId,
@@ -12,16 +13,24 @@ class GameProgressPreference {
     required List<String> subgames,
   }) async {
     final prefs = await SharedPreferences.getInstance();
+    final key = _mainKey(studentId, lessonId, gameId);
 
-    for (final subgame in subgames) {
-      final key = _key(studentId, lessonId, gameId, subgame);
-      // Initialize only if not already existing
-      if (!prefs.containsKey(key)) {
-        await prefs.setString(key, 'unfinished');
-      }
+    // Check if this key already exists
+    if (prefs.containsKey(key)) {
+      print('📂 Existing progress found for $key, using saved data.');
+      await _listRegisteredSubgames(studentId, lessonId, gameId);
+      return;
     }
 
-    print('🗂️ Registered subgames for Game $gameId: $subgames');
+    // Create new map for subgames
+    final Map<String, String> progressMap = {
+      for (final subgame in subgames) subgame: 'unfinished',
+    };
+
+    await prefs.setString(key, jsonEncode(progressMap));
+    print('🗂️ Registered new subgames for Game $gameId: $subgames');
+
+    await _listRegisteredSubgames(studentId, lessonId, gameId);
   }
 
   /// Save progress for a specific subgame
@@ -32,12 +41,27 @@ class GameProgressPreference {
     required String subgameName,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    final key = _key(studentId, lessonId, gameId, subgameName);
+    final key = _mainKey(studentId, lessonId, gameId);
 
-    await prefs.setString(key, 'finished');
-    print('💾 Marked $subgameName as finished.');
+    if (!prefs.containsKey(key)) {
+      print('⚠️ No progress data found for $key — creating new entry.');
+      await registerSubgames(
+        studentId: studentId,
+        lessonId: lessonId,
+        gameId: gameId,
+        subgames: [subgameName],
+      );
+    }
 
-    // After marking finished, check if all are completed
+    // Decode, update subgame, and save
+    final Map<String, dynamic> progressMap = jsonDecode(
+      prefs.getString(key) ?? '{}',
+    );
+    progressMap[subgameName] = 'finished';
+    await prefs.setString(key, jsonEncode(progressMap));
+
+    print('💾 Updated $subgameName as finished in $key.');
+
     await _checkAndMarkGameIfComplete(
       studentId: studentId,
       lessonId: lessonId,
@@ -45,50 +69,38 @@ class GameProgressPreference {
     );
   }
 
-  /// Helper: key builder
-  static String _key(
-    int studentId,
-    int lessonId,
-    int gameId,
-    String subgameName,
-  ) {
-    return '$_prefix${studentId}_${lessonId}_${gameId}_$subgameName';
+  /// Helper: key builder (no subgame here)
+  static String _mainKey(int studentId, int lessonId, int gameId) {
+    return '$_prefix${studentId}_${lessonId}_${gameId}';
   }
 
-  /// Check if all subgames of a game are completed
+  /// Check if all subgames for a game are completed
   static Future<void> _checkAndMarkGameIfComplete({
     required int studentId,
     required int lessonId,
     required int gameId,
   }) async {
     final prefs = await SharedPreferences.getInstance();
+    final key = _mainKey(studentId, lessonId, gameId);
 
-    // Collect all keys for this (student, lesson, game)
-    final allKeys = prefs.getKeys().where(
-      (k) => k.startsWith('$_prefix${studentId}_${lessonId}_${gameId}_'),
-    );
-
-    if (allKeys.isEmpty) {
-      print('⚠️ No subgames registered for game $gameId.');
+    if (!prefs.containsKey(key)) {
+      print('⚠️ No progress found for $key');
       return;
     }
 
-    // Check all statuses
-    bool allFinished = true;
-    for (final key in allKeys) {
-      final status = prefs.getString(key);
-      if (status != 'finished') {
-        allFinished = false;
-        break;
-      }
-    }
+    final Map<String, dynamic> progressMap = jsonDecode(
+      prefs.getString(key) ?? '{}',
+    );
 
-    print('🔍 Game $gameId → allFinished: $allFinished');
+    final allFinished = progressMap.values.every(
+      (status) => status == 'finished',
+    );
+
+    print('🔍 Checking completion for $key → allFinished: $allFinished');
 
     if (allFinished) {
       final db = AppDatabase.instance;
 
-      // 1️⃣ Fetch GameLesson link
       final link = await db.fetchGameLessonLink(lessonId, gameId);
       if (link == null) {
         print(
@@ -98,8 +110,6 @@ class GameProgressPreference {
       }
 
       final activityLessonId = link['id'] as int;
-
-      // 2️⃣ Fetch student activity
       final studentActivity = await db.fetchStudentGameActivity(
         studentId: studentId,
         activityLessonId: activityLessonId,
@@ -108,37 +118,55 @@ class GameProgressPreference {
       final database = await db.database;
       final now = DateTime.now().toIso8601String();
 
-      // Update existing record
       await database.update(
         AppDatabase.studentActivitiesTable,
         {'status': 'finished', 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [studentActivity!['id']],
       );
-      print('🏁 Game $gameId marked finished (updated existing).');
 
+      print('🏁 Game $gameId marked as finished in the database.');
       await clearGameProgress(
         studentId: studentId,
         lessonId: lessonId,
         gameId: gameId,
       );
-      print('🧹 Cleared progress data for Game $gameId after completion.');
     }
   }
 
-  /// Optional: clear a game’s progress (for testing)
+  /// Show all subgames and statuses
+  static Future<void> _listRegisteredSubgames(
+    int studentId,
+    int lessonId,
+    int gameId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = _mainKey(studentId, lessonId, gameId);
+
+    if (!prefs.containsKey(key)) {
+      print('📭 No progress found for $key.');
+      return;
+    }
+
+    final Map<String, dynamic> progressMap = jsonDecode(
+      prefs.getString(key) ?? '{}',
+    );
+
+    print('📋 Progress for $key:');
+    progressMap.forEach((subgame, status) {
+      print('   • $subgame → $status');
+    });
+  }
+
+  /// Clear all progress for this game
   static Future<void> clearGameProgress({
     required int studentId,
     required int lessonId,
     required int gameId,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys().where(
-      (k) => k.startsWith('$_prefix${studentId}_${lessonId}_${gameId}_'),
-    );
-    for (final key in keys) {
-      await prefs.remove(key);
-    }
-    print('🧹 Cleared progress for game $gameId');
+    final key = _mainKey(studentId, lessonId, gameId);
+    await prefs.remove(key);
+    print('🧹 Cleared all progress for $key');
   }
 }
