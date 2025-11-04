@@ -89,6 +89,8 @@ flutter:
     - assets/games/count_quest/music/
     - assets/games/finger_addition/images/
     - assets/games/finger_addition/music/
+    - assets/games/fruit_addition/images/
+    - assets/games/fruit_addition/music/
     - assets/games/fruit_subtraction/images/
     - assets/games/fruit_subtraction/music/
     - assets/games/objectify/images/
