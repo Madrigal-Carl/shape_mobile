@@ -60,8 +60,9 @@ class HomeScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(ctx).pop(); // Close dialog
-              Navigator.of(context).pop();
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/home', (route) => false);
             },
             child: const Text('Yes'),
           ),

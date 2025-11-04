@@ -59,7 +59,11 @@ class GameScreen extends StatelessWidget {
             ],
           ),
         );
-        if (shouldExit == true) Navigator.pop(context);
+        if (shouldExit == true) {
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil('/home', (route) => false);
+        }
         return false;
       },
       child: Scaffold(

@@ -294,8 +294,9 @@ class _MainMenuScreenState extends State<_MainMenuScreen>
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(ctx).pop();
-              Navigator.of(context).pop();
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/home', (route) => false);
             },
             child: const Text('Exit'),
           ),

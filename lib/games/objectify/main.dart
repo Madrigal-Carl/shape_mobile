@@ -83,7 +83,11 @@ class _ObjectifyRootState extends State<ObjectifyRoot>
             ],
           ),
         );
-        if (shouldExit == true) Navigator.pop(context);
+        if (shouldExit == true) {
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil('/home', (route) => false);
+        }
         return false;
       },
       child: Scaffold(
@@ -152,7 +156,11 @@ class _ObjectifyRootState extends State<ObjectifyRoot>
                                   child: const Text("Cancel"),
                                 ),
                                 TextButton(
-                                  onPressed: () => Navigator.pop(ctx, true),
+                                  onPressed: () => Navigator.of(context)
+                                      .pushNamedAndRemoveUntil(
+                                        '/home',
+                                        (route) => false,
+                                      ),
                                   child: const Text("Exit"),
                                 ),
                               ],
