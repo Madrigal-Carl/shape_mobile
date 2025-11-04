@@ -140,7 +140,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             studentId: widget.studentId,
             lessonId: widget.lessonId,
             gameId: widget.gameId,
-            subgameName: 'subtraction',
+            subgameName: 'fruit_subtraction',
           );
           setState(() => showOverlay = true);
         } else {

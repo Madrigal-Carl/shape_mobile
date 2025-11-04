@@ -7,6 +7,7 @@ import 'match_mania/entry.dart';
 import 'count_quest/entry.dart';
 import 'finger_addition/entry.dart';
 import 'fruit_subtraction/entry.dart';
+import 'objectify/entry.dart';
 
 class GameRegistry {
   static final Map<int, Widget Function(BuildContext, int, int, int)> _games = {
@@ -26,7 +27,12 @@ class GameRegistry {
       studentId: studentId,
       gameId: gameId,
     ),
-    8: (context, lessonId, studentId, gameId) => FruitSubtractionEntry(
+    4: (context, lessonId, studentId, gameId) => FruitSubtractionEntry(
+      lessonId: lessonId,
+      studentId: studentId,
+      gameId: gameId,
+    ),
+    8: (context, lessonId, studentId, gameId) => ObjectifyEntry(
       lessonId: lessonId,
       studentId: studentId,
       gameId: gameId,

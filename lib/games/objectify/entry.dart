@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:shape_mobile/services/game_progress_preference.dart';
 import 'main.dart';
 
-class FingerAdditionEntry extends StatelessWidget {
+class ObjectifyEntry extends StatelessWidget {
   final int lessonId;
   final int studentId;
   final int gameId;
 
-  const FingerAdditionEntry({
+  const ObjectifyEntry({
     super.key,
     required this.lessonId,
     required this.studentId,
@@ -16,15 +16,16 @@ class FingerAdditionEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Register subgames for progress tracking
+    // Register subgames (optional, you can customize)
     GameProgressPreference.registerSubgames(
       studentId: studentId,
       lessonId: lessonId,
       gameId: gameId,
-      subgames: ['finger_addition'],
+      subgames: ['animal_game', 'fruits_game', 'things_game', 'mixed_game'],
     );
 
-    return FingerAdditionRoot(
+    // Return your routed game’s root widget
+    return ObjectifyRoot(
       lessonId: lessonId,
       studentId: studentId,
       gameId: gameId,

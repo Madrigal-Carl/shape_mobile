@@ -140,7 +140,7 @@ class _GameScreenState extends State<GameScreen>
             studentId: widget.studentId,
             lessonId: widget.lessonId,
             gameId: widget.gameId,
-            subgameName: 'addition',
+            subgameName: 'finger_addition',
           );
 
           setState(() => showOverlay = true);

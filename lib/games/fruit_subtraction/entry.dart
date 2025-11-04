@@ -21,7 +21,7 @@ class FruitSubtractionEntry extends StatelessWidget {
       studentId: studentId,
       lessonId: lessonId,
       gameId: gameId,
-      subgames: ['subtraction'],
+      subgames: ['fruit_subtraction'],
     );
 
     return FruitSubtractionRoot(
