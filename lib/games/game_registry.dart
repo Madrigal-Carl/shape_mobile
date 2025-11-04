@@ -11,6 +11,7 @@ import 'objectify/entry.dart';
 import 'fruit_addition/entry.dart';
 import 'finger_subtraction/entry.dart';
 import 'sign_quest/entry.dart';
+import 'cast_spell/entry.dart';
 
 class GameRegistry {
   static final Map<int, Widget Function(BuildContext, int, int, int)> _games = {
@@ -50,7 +51,12 @@ class GameRegistry {
       studentId: studentId,
       gameId: gameId,
     ),
-    20: (context, lessonId, studentId, gameId) => SignQuestEntry(
+    8: (context, lessonId, studentId, gameId) => SignQuestEntry(
+      lessonId: lessonId,
+      studentId: studentId,
+      gameId: gameId,
+    ),
+    20: (context, lessonId, studentId, gameId) => CastSpellEntry(
       lessonId: lessonId,
       studentId: studentId,
       gameId: gameId,

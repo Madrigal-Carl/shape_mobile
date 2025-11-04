@@ -99,6 +99,8 @@ flutter:
     - assets/games/objectify/music/
     - assets/games/sign_quest/images/
     - assets/games/sign_quest/music/
+    - assets/games/cast_spell/images/
+    - assets/games/cast_spell/music/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
