@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shape_mobile/db/app_database.dart';
 import 'package:shape_mobile/models/GameActivityModel.dart';
+import 'package:shape_mobile/models/LessonModel.dart';
 import 'package:shape_mobile/services/preference_service.dart';
 import 'package:shape_mobile/utils.dart';
 import 'package:shape_mobile/games/game_registry.dart';
@@ -17,6 +18,7 @@ class GameCollectionWidget extends StatefulWidget {
 
 class _GameCollectionWidgetState extends State<GameCollectionWidget> {
   List<Map<String, dynamic>> _games = [];
+  Map<String, List<Map<String, dynamic>>> _groupedGames = {};
   bool _isLoading = true;
 
   @override
@@ -33,10 +35,28 @@ class _GameCollectionWidgetState extends State<GameCollectionWidget> {
         ? await db.fetchGamesWithLessonTitles(studentId!)
         : await db.fetchGamesWithLessonTitlesByLessonId(widget.lessonId!);
 
+    Map<String, List<Map<String, dynamic>>> grouped = {};
+    for (final item in results) {
+      final lessonId = item['lesson_id'] as int;
+      final lessonResult = await (await db.database).query(
+        AppDatabase.lessonsTable,
+        where: 'id = ?',
+        whereArgs: [lessonId],
+      );
+
+      if (lessonResult.isEmpty) continue;
+      final lesson = Lesson.fromJson(lessonResult.first);
+      final subject = lesson.subjectName ?? 'No Subject';
+
+      if (!grouped.containsKey(subject)) grouped[subject] = [];
+      grouped[subject]!.add(item);
+    }
+
     if (!mounted) return;
 
     setState(() {
       _games = results;
+      _groupedGames = grouped;
       _isLoading = false;
     });
   }
@@ -62,7 +82,7 @@ class _GameCollectionWidgetState extends State<GameCollectionWidget> {
       children: [
         Text(
           widget.title,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
         ),
 
         if (_games.isEmpty)
@@ -88,76 +108,103 @@ class _GameCollectionWidgetState extends State<GameCollectionWidget> {
             ),
           )
         else
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 18,
-            childAspectRatio: widget.lessonId == null ? 1.2 : 1.4,
-            children: _games.map((item) {
-              final game = item['game'] as GameActivity;
-              final lessonTitle = item['lesson_title'] as String?;
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 18,
+            children: _groupedGames.entries.map((entry) {
+              final subject = entry.key;
+              final games = entry.value;
 
-              return Material(
-                borderRadius: BorderRadius.circular(12),
-                clipBehavior: Clip.antiAlias,
-                color: Colors.white,
-                child: InkWell(
-                  onTap: () async {
-                    await GameRegistry.launchGameById(
-                      context: context,
-                      gameId: game.id,
-                      lessonId: item['lesson_id'],
-                    );
-                  },
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          width: double.infinity,
-                          height: 100,
-                          color: Colors.blue.shade100,
-                          child: const Icon(
-                            Icons.videogame_asset_rounded,
-                            size: 60,
-                            color: Colors.blueAccent,
-                          ),
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 4,
+                children: [
+                  if (widget.lessonId == null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Text(
+                        toTitleCase(subject),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              toTitleCase(game.name),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
-                              ),
-                            ),
-                            if (widget.lessonId == null)
-                              Text(
-                                toTitleCase(lessonTitle!),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
+                    ),
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 18,
+                    childAspectRatio: widget.lessonId == null ? 1.1 : 1.3,
+                    children: games.map((item) {
+                      final game = item['game'] as GameActivity;
+                      return Material(
+                        borderRadius: BorderRadius.circular(12),
+                        clipBehavior: Clip.antiAlias,
+                        color: Colors.white,
+                        child: InkWell(
+                          onTap: () async {
+                            await GameRegistry.launchGameById(
+                              context: context,
+                              gameId: game.id,
+                              lessonId: item['lesson_id'],
+                            );
+                          },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 100,
+                                  color: Colors.blue.shade100,
+                                  child: const Icon(
+                                    Icons.videogame_asset_rounded,
+                                    size: 60,
+                                    color: Colors.blueAccent,
+                                  ),
                                 ),
                               ),
-                          ],
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      toTitleCase(game.name),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    if (widget.lessonId == null)
+                                      Text(
+                                        toTitleCase(
+                                          games.first['lesson_title'] ??
+                                              'No Lesson',
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      );
+                    }).toList(),
                   ),
-                ),
+                ],
               );
             }).toList(),
           ),

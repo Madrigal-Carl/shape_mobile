@@ -15,7 +15,7 @@ class LessonScreen extends StatelessWidget {
           children: [
             GreetingWidget(),
             RecentLessonWidget(showTitle: true),
-            LessonCollectionWidget(title: 'Ongoing Lessons'),
+            LessonCollectionWidget(),
           ],
         ),
       ),

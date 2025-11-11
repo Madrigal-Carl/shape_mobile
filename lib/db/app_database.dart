@@ -78,6 +78,7 @@ class AppDatabase {
       CREATE TABLE $lessonsTable (
         id INTEGER PRIMARY KEY,
         school_year_id INTEGER NOT NULL,
+        subject_name TEXT,
         title TEXT NOT NULL,
         description TEXT,
         created_at TEXT,

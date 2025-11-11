@@ -71,8 +71,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
       title: Text(
         widget.title,
         style: const TextStyle(
-          color: Colors.black87,
-          fontWeight: FontWeight.w600,
+          color: Colors.black,
+          fontWeight: FontWeight.w700,
         ),
       ),
       actions: <Widget>[

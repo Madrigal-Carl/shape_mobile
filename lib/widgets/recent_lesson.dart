@@ -82,7 +82,7 @@ class _RecentLessonWidgetState extends State<RecentLessonWidget> {
           if (widget.showTitle)
             Text(
               widget.title,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
             ),
           GestureDetector(
             onTap: () {

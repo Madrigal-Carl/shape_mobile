@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:shape_mobile/db/app_database.dart';
 import 'package:shape_mobile/models/VideoModel.dart';
+import 'package:shape_mobile/models/LessonModel.dart';
 import 'video_player_screen.dart';
 import 'package:shape_mobile/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -20,6 +21,7 @@ class VideoCollectionWidget extends StatefulWidget {
 class _VideoCollectionWidgetState extends State<VideoCollectionWidget> {
   List<Video> _videos = [];
   bool _isLoading = true;
+  Map<String, List<Video>> _groupedVideos = {};
 
   @override
   void initState() {
@@ -61,11 +63,35 @@ class _VideoCollectionWidgetState extends State<VideoCollectionWidget> {
       videos = await AppDatabase.instance.fetchAllVideosSortedByLatest();
     }
 
-    // await Future.delayed(const Duration(milliseconds: 800));
+    // Group videos by lesson's subject name
+    final db = AppDatabase.instance;
+    Map<String, List<Video>> grouped = {};
+
+    for (final video in videos) {
+      // Directly fetch the lesson (no null check)
+      final result = await (await db.database).query(
+        AppDatabase.lessonsTable,
+        where: 'id = ?',
+        whereArgs: [video.lessonId],
+      );
+
+      Lesson lesson;
+      if (result.isNotEmpty) {
+        lesson = Lesson.fromJson(result.first);
+      } else {
+        continue;
+      } // skip if lesson not found
+
+      final subject = lesson.subjectName ?? 'No Subject';
+      if (!grouped.containsKey(subject)) grouped[subject] = [];
+      grouped[subject]!.add(video);
+    }
 
     if (!mounted) return;
+
     setState(() {
       _videos = videos;
+      _groupedVideos = grouped;
       _isLoading = false;
     });
   }
@@ -91,9 +117,8 @@ class _VideoCollectionWidgetState extends State<VideoCollectionWidget> {
       children: [
         Text(
           widget.title,
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
         ),
-
         if (_videos.isEmpty)
           SizedBox(
             width: double.infinity,
@@ -117,84 +142,109 @@ class _VideoCollectionWidgetState extends State<VideoCollectionWidget> {
             ),
           )
         else
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 18,
-            childAspectRatio: widget.lessonId == null ? 1.2 : 1.4,
-            children: _videos.map((video) {
-              return Material(
-                borderRadius: BorderRadius.circular(12),
-                clipBehavior: Clip.antiAlias,
-                color: Colors.white,
-                child: InkWell(
-                  onTap: () => _handleVideoTap(video),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: SizedBox(
-                              width: double.infinity,
-                              height: 100,
-                              child: Image.file(
-                                File(video.thumbnail!),
-                                fit: BoxFit.cover,
-                                alignment: Alignment.center,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withOpacity(0.75),
-                            ),
-                            child: const Icon(
-                              Icons.play_arrow_rounded,
-                              color: Colors.black,
-                              size: 26,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              toTitleCase(video.title),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
-                              ),
-                            ),
-                            if (widget.lessonId == null)
-                              Text(
-                                toTitleCase(video.lessonTitle!),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                          ],
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 18,
+            children: _groupedVideos.entries.map((entry) {
+              final subject = entry.key;
+              final videos = entry.value;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 4,
+                children: [
+                  if (widget.lessonId == null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Text(
+                        toTitleCase(subject),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
+                    ),
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 18,
+                    childAspectRatio: widget.lessonId == null ? 1.1 : 1.3,
+                    children: videos.map((video) {
+                      return Material(
+                        borderRadius: BorderRadius.circular(12),
+                        clipBehavior: Clip.antiAlias,
+                        color: Colors.white,
+                        child: InkWell(
+                          onTap: () => _handleVideoTap(video),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: SizedBox(
+                                      width: double.infinity,
+                                      height: 100,
+                                      child: Image.file(
+                                        File(video.thumbnail!),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white.withOpacity(0.75),
+                                    ),
+                                    child: const Icon(
+                                      Icons.play_arrow_rounded,
+                                      color: Colors.black,
+                                      size: 26,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      toTitleCase(video.title),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    if (widget.lessonId == null)
+                                      Text(
+                                        toTitleCase(video.lessonTitle!),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ),
-                ),
+                ],
               );
             }).toList(),
           ),

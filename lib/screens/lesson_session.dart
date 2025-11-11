@@ -61,7 +61,10 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Column(
               children: [
-                VideoCollectionWidget(title: 'Videos', lessonId: lesson!.id),
+                VideoCollectionWidget(
+                  title: 'Educational Videos',
+                  lessonId: lesson!.id,
+                ),
                 const SizedBox(height: 12),
                 GameCollectionWidget(
                   title: 'Gamified Activities',
