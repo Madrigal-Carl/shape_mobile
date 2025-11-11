@@ -13,6 +13,7 @@ import 'finger_subtraction/entry.dart';
 import 'sign_quest/entry.dart';
 import 'cast_spell/entry.dart';
 import 'number_quest/entry.dart';
+import 'self_care/entry.dart';
 
 class GameRegistry {
   static final Map<int, Widget Function(BuildContext, int, int, int)> _games = {
@@ -62,11 +63,13 @@ class GameRegistry {
       studentId: studentId,
       gameId: gameId,
     ),
-    20: (context, lessonId, studentId, gameId) => NumberQuestEntry(
+    10: (context, lessonId, studentId, gameId) => NumberQuestEntry(
       lessonId: lessonId,
       studentId: studentId,
       gameId: gameId,
     ),
+    17: (context, lessonId, studentId, gameId) =>
+        SelfCareEntry(lessonId: lessonId, studentId: studentId, gameId: gameId),
   };
 
   static List<int> get allGameIds => _games.keys.toList();

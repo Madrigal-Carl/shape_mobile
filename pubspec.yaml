@@ -103,6 +103,8 @@ flutter:
     - assets/games/cast_spell/music/
     - assets/games/number_quest/images/
     - assets/games/number_quest/music/
+    - assets/games/self_care/images/
+    - assets/games/self_care/music/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
