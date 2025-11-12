@@ -14,6 +14,7 @@ import 'sign_quest/entry.dart';
 import 'cast_spell/entry.dart';
 import 'number_quest/entry.dart';
 import 'self_care/entry.dart';
+import 'sort_safari/entry.dart';
 
 class GameRegistry {
   static final Map<int, Widget Function(BuildContext, int, int, int)> _games = {
@@ -68,8 +69,13 @@ class GameRegistry {
       studentId: studentId,
       gameId: gameId,
     ),
-    17: (context, lessonId, studentId, gameId) =>
+    11: (context, lessonId, studentId, gameId) =>
         SelfCareEntry(lessonId: lessonId, studentId: studentId, gameId: gameId),
+    17: (context, lessonId, studentId, gameId) => SortSafariEntry(
+      lessonId: lessonId,
+      studentId: studentId,
+      gameId: gameId,
+    ),
   };
 
   static List<int> get allGameIds => _games.keys.toList();
