@@ -112,6 +112,9 @@ flutter:
     - assets/games/animal_trace/images/
     - assets/games/animal_trace/music/
     - assets/games/animal_trace/fonts/
+    - assets/games/shape_trace/images/
+    - assets/games/shape_trace/music/
+    - assets/games/shape_trace/fonts/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

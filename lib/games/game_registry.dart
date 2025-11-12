@@ -17,6 +17,7 @@ import 'self_care/entry.dart';
 import 'sort_safari/entry.dart';
 import 'fairly_multiplication/entry.dart';
 import 'animal_trace/entry.dart';
+import 'shape_trace/entry.dart';
 
 class GameRegistry {
   static final Map<int, Widget Function(BuildContext, int, int, int)> _games = {
@@ -83,7 +84,12 @@ class GameRegistry {
       studentId: studentId,
       gameId: gameId,
     ),
-    17: (context, lessonId, studentId, gameId) => AnimalTraceEntry(
+    14: (context, lessonId, studentId, gameId) => AnimalTraceEntry(
+      lessonId: lessonId,
+      studentId: studentId,
+      gameId: gameId,
+    ),
+    17: (context, lessonId, studentId, gameId) => ShapeTraceEntry(
       lessonId: lessonId,
       studentId: studentId,
       gameId: gameId,
