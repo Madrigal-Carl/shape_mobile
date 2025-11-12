@@ -220,10 +220,10 @@ class AuthService {
       final awardsJson = data['awards'] ?? [];
       final studentAwardsJson = data['student_awards'] ?? [];
 
-      final isNewQuarter = data['new_quarter'] == true;
+      final reset = data['reset'] == true;
 
-      if (isNewQuarter) {
-        onProgress?.call("New quarter detected. Resetting local data...");
+      if (reset) {
+        onProgress?.call("Reset detected. Resetting local data...");
         await db.clearAllTables();
       }
 
