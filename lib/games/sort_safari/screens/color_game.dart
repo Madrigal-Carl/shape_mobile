@@ -75,7 +75,7 @@ class _ColorGameScreenState extends State<ColorGameScreen>
         studentId: widget.studentId,
         lessonId: widget.lessonId,
         gameId: widget.gameId,
-        subgameName: 'animal_game',
+        subgameName: 'color_game',
       );
       setState(() => showWinPopup = true);
       return;

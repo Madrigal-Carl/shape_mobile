@@ -86,7 +86,7 @@ class _SizeGameScreenState extends State<SizeGameScreen>
         studentId: widget.studentId,
         lessonId: widget.lessonId,
         gameId: widget.gameId,
-        subgameName: 'animal_game',
+        subgameName: 'size_game',
       );
       setState(() => showWinPopup = true);
       return;

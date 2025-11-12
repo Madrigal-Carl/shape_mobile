@@ -15,6 +15,7 @@ import 'cast_spell/entry.dart';
 import 'number_quest/entry.dart';
 import 'self_care/entry.dart';
 import 'sort_safari/entry.dart';
+import 'fairly_multiplication/entry.dart';
 
 class GameRegistry {
   static final Map<int, Widget Function(BuildContext, int, int, int)> _games = {
@@ -71,7 +72,12 @@ class GameRegistry {
     ),
     11: (context, lessonId, studentId, gameId) =>
         SelfCareEntry(lessonId: lessonId, studentId: studentId, gameId: gameId),
-    17: (context, lessonId, studentId, gameId) => SortSafariEntry(
+    12: (context, lessonId, studentId, gameId) => SortSafariEntry(
+      lessonId: lessonId,
+      studentId: studentId,
+      gameId: gameId,
+    ),
+    17: (context, lessonId, studentId, gameId) => FairlyMultiplicationEntry(
       lessonId: lessonId,
       studentId: studentId,
       gameId: gameId,

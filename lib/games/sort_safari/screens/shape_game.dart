@@ -85,7 +85,7 @@ class _ShapeGameScreenState extends State<ShapeGameScreen>
         studentId: widget.studentId,
         lessonId: widget.lessonId,
         gameId: widget.gameId,
-        subgameName: 'animal_game',
+        subgameName: 'shape_game',
       );
       setState(() => showWinPopup = true);
       return;

@@ -157,7 +157,7 @@ class _TeethScreenState extends State<TeethScreen>
           studentId: widget.studentId,
           lessonId: widget.lessonId,
           gameId: widget.gameId,
-          subgameName: 'fruit_addition',
+          subgameName: 'brush_teeth',
         );
         await _saveBrushTime();
       });

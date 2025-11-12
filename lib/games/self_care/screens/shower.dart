@@ -166,7 +166,7 @@ class _ShowerScreenState extends State<ShowerScreen>
           studentId: widget.studentId,
           lessonId: widget.lessonId,
           gameId: widget.gameId,
-          subgameName: 'fruit_addition',
+          subgameName: 'bath',
         );
         await _saveShowerTime();
       });

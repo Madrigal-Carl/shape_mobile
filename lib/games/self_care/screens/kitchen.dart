@@ -144,7 +144,7 @@ class _KitchenScreenState extends State<KitchenScreen>
       studentId: widget.studentId,
       lessonId: widget.lessonId,
       gameId: widget.gameId,
-      subgameName: 'fruit_addition',
+      subgameName: 'eat',
     );
     await _saveHungerAfterFeeding();
   }
