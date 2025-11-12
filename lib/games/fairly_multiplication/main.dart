@@ -35,7 +35,9 @@ class _FairlyMultiplicationRootState extends State<FairlyMultiplicationRoot>
   Future<void> _initMusic() async {
     try {
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-      await _audioPlayer.setSource(AssetSource('music/bgm.mp3'));
+      await _audioPlayer.setSource(
+        AssetSource('games/fairly_multiplication/music/bgm.mp3'),
+      );
       await _audioPlayer.setVolume(1.0);
       await _audioPlayer.resume();
       print('✅ Background music playing...');
@@ -183,7 +185,10 @@ class _MainMenuScreenState extends State<_MainMenuScreen>
           children: [
             /// 🌄 Background
             Positioned.fill(
-              child: Image.asset('assets/images/bg.png', fit: BoxFit.cover),
+              child: Image.asset(
+                'assets/games/fairly_multiplication/images/bg.png',
+                fit: BoxFit.cover,
+              ),
             ),
 
             /// 📋 Menu Content
@@ -195,7 +200,7 @@ class _MainMenuScreenState extends State<_MainMenuScreen>
                     children: [
                       const SizedBox(height: 40),
                       Image.asset(
-                        'assets/images/logo.png',
+                        'assets/games/fairly_multiplication/images/logo.png',
                         width: size.width * 0.7,
                         fit: BoxFit.contain,
                         errorBuilder: (_, __, ___) =>
@@ -205,7 +210,8 @@ class _MainMenuScreenState extends State<_MainMenuScreen>
 
                       // ▶️ Start button
                       _woodButton(
-                        assetPath: 'assets/images/start.png',
+                        assetPath:
+                            'assets/games/fairly_multiplication/images/start.png',
                         width: buttonWidth,
                         onTap: () {
                           Navigator.push(
@@ -224,7 +230,8 @@ class _MainMenuScreenState extends State<_MainMenuScreen>
 
                       // ❓ How to Play button
                       _woodButton(
-                        assetPath: 'assets/images/htp.png',
+                        assetPath:
+                            'assets/games/fairly_multiplication/images/htp.png',
                         width: buttonWidth,
                         onTap: () {
                           setState(() => showHowToPlay = true);
@@ -235,7 +242,8 @@ class _MainMenuScreenState extends State<_MainMenuScreen>
 
                       // ❌ Quit button (✅ fixed)
                       _woodButton(
-                        assetPath: 'assets/images/quit.png',
+                        assetPath:
+                            'assets/games/fairly_multiplication/images/quit.png',
                         width: buttonWidth,
                         onTap: () {
                           showDialog(
@@ -304,7 +312,7 @@ class _MainMenuScreenState extends State<_MainMenuScreen>
                         children: [
                           /// Wooden frame image
                           Image.asset(
-                            'assets/images/how.png',
+                            'assets/games/fairly_multiplication/images/how.png',
                             width: 330,
                             fit: BoxFit.contain,
                           ),
@@ -318,7 +326,7 @@ class _MainMenuScreenState extends State<_MainMenuScreen>
                                 setState(() => showHowToPlay = false);
                               },
                               child: Image.asset(
-                                'assets/images/x.png',
+                                'assets/games/fairly_multiplication/images/x.png',
                                 height: 40,
                               ),
                             ),

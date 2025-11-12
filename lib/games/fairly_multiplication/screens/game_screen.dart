@@ -138,12 +138,21 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   Widget _draggableNum(String img, int value) {
     return Draggable<int>(
       data: value,
-      feedback: Image.asset("assets/images/$img", height: 80),
+      feedback: Image.asset(
+        "assets/games/fairly_multiplication/images/$img",
+        height: 80,
+      ),
       childWhenDragging: Opacity(
         opacity: 0.4,
-        child: Image.asset("assets/images/$img", height: 80),
+        child: Image.asset(
+          "assets/games/fairly_multiplication/images/$img",
+          height: 80,
+        ),
       ),
-      child: Image.asset("assets/images/$img", height: 80),
+      child: Image.asset(
+        "assets/games/fairly_multiplication/images/$img",
+        height: 80,
+      ),
     );
   }
 
@@ -166,10 +175,16 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 child: child,
               );
             },
-            child: Image.asset("assets/images/woodbox.png", height: 90),
+            child: Image.asset(
+              "assets/games/fairly_multiplication/images/woodbox.png",
+              height: 90,
+            ),
           ),
           if (answer != null)
-            Image.asset("assets/images/$answer.png", height: 60),
+            Image.asset(
+              "assets/games/fairly_multiplication/images/$answer.png",
+              height: 60,
+            ),
         ],
       ),
     );
@@ -184,159 +199,190 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         ? rounds[currentRound]['b']!
         : 1;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // 🌄 Background
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage("assets/images/bg.png"),
-                fit: BoxFit.cover,
+    return WillPopScope(
+      onWillPop: () async {
+        if (showMenuPopup) {
+          setState(() => showMenuPopup = false);
+        } else if (showHowToPlay) {
+          setState(() => showHowToPlay = false);
+        } else if (showOverlay) {
+          return false;
+        } else {
+          setState(() => showMenuPopup = true);
+          _menuAnimController.forward(from: 0);
+        }
+        return false;
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            // 🌄 Background
+            Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(
+                    "assets/games/fairly_multiplication/images/bg.png",
+                  ),
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          ),
 
-          SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 40),
+            SafeArea(
+              child: Column(
+                children: [
+                  const SizedBox(height: 40),
 
-                // 🧮 Top bar (Score + Menu)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Image.asset(
-                            "assets/images/scoreplaceholder.png",
-                            height: 55,
-                          ),
-                          Positioned(
-                            right: 25,
-                            child: Text(
-                              "Score: $score",
-                              style: GoogleFonts.dynaPuff(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                shadows: [
-                                  const Shadow(
-                                    offset: Offset(2, 2),
-                                    blurRadius: 3,
-                                    color: Colors.black45,
-                                  ),
-                                ],
+                  // 🧮 Top bar (Score + Menu)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Image.asset(
+                              "assets/games/fairly_multiplication/images/scoreplaceholder.png",
+                              height: 55,
+                            ),
+                            Positioned(
+                              right: 25,
+                              child: Text(
+                                "Score: $score",
+                                style: GoogleFonts.dynaPuff(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  shadows: [
+                                    const Shadow(
+                                      offset: Offset(2, 2),
+                                      blurRadius: 3,
+                                      color: Colors.black45,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          setState(() => showMenuPopup = true);
-                          _menuAnimController.forward(from: 0);
-                        },
-                        child: Image.asset(
-                          "assets/images/menu.png",
-                          height: 45,
+                          ],
                         ),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() => showMenuPopup = true);
+                            _menuAnimController.forward(from: 0);
+                          },
+                          child: Image.asset(
+                            "assets/games/fairly_multiplication/images/menu.png",
+                            height: 45,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 50),
+
+                  // ✨ Title & subtitle
+                  Text(
+                    "Multiply",
+                    style: GoogleFonts.dynaPuff(
+                      fontSize: 38,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "Drag the correct product to the box that\nmatches each multiplication problem!",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.dynaPuff(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+
+                  const SizedBox(height: 35),
+
+                  // 🧮 Equation section
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        "assets/games/fairly_multiplication/images/$a.png",
+                        height: 85,
+                      ),
+                      const SizedBox(width: 8),
+                      Image.asset(
+                        "assets/games/fairly_multiplication/images/multiply.png",
+                        height: 45,
+                      ),
+                      const SizedBox(width: 8),
+                      Image.asset(
+                        "assets/games/fairly_multiplication/images/$b.png",
+                        height: 85,
                       ),
                     ],
                   ),
-                ),
 
-                const SizedBox(height: 50),
+                  const SizedBox(height: 10),
 
-                // ✨ Title & subtitle
-                Text(
-                  "Multiply",
-                  style: GoogleFonts.dynaPuff(
-                    fontSize: 38,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                  // = and box section
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        "assets/games/fairly_multiplication/images/equal.png",
+                        height: 40,
+                      ),
+                      const SizedBox(width: 10),
+                      _dropBox(),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  "Drag the correct product to the box that\nmatches each multiplication problem!",
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.dynaPuff(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                ),
 
-                const SizedBox(height: 35),
+                  const SizedBox(height: 250),
 
-                // 🧮 Equation section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset("assets/images/$a.png", height: 85),
-                    const SizedBox(width: 8),
-                    Image.asset("assets/images/multiply.png", height: 45),
-                    const SizedBox(width: 8),
-                    Image.asset("assets/images/$b.png", height: 85),
-                  ],
-                ),
-
-                const SizedBox(height: 10),
-
-                // = and box section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset("assets/images/equal.png", height: 40),
-                    const SizedBox(width: 10),
-                    _dropBox(),
-                  ],
-                ),
-
-                const SizedBox(height: 250),
-
-                // 🪵 Wooden platform with choices
-                Container(
-                  height: 110,
-                  width: 320,
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage("assets/images/wood.png"),
-                      fit: BoxFit.fill,
+                  // 🪵 Wooden platform with choices
+                  Container(
+                    height: 110,
+                    width: 320,
+                    decoration: const BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage(
+                          "assets/games/fairly_multiplication/images/wood.png",
+                        ),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: currentChoices
+                          .map((n) => _draggableNum("$n.png", n))
+                          .toList(),
                     ),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: currentChoices
-                        .map((n) => _draggableNum("$n.png", n))
-                        .toList(),
-                  ),
-                ),
 
-                const Spacer(),
-              ],
+                  const Spacer(),
+                ],
+              ),
             ),
-          ),
 
-          // 🎉 Confetti effect
-          Align(
-            alignment: Alignment.center,
-            child: ConfettiWidget(
-              confettiController: _confettiController,
-              blastDirectionality: BlastDirectionality.explosive,
-              gravity: 0.4,
-              numberOfParticles: 25,
+            // 🎉 Confetti effect
+            Align(
+              alignment: Alignment.center,
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirectionality: BlastDirectionality.explosive,
+                gravity: 0.4,
+                numberOfParticles: 25,
+              ),
             ),
-          ),
 
-          if (showMenuPopup) _buildMenuPopup(),
-          if (showHowToPlay) _buildHowToPlayPopup(),
-          if (showOverlay) _buildEndOverlay(),
-        ],
+            if (showMenuPopup) _buildMenuPopup(),
+            if (showHowToPlay) _buildHowToPlayPopup(),
+            if (showOverlay) _buildEndOverlay(),
+          ],
+        ),
       ),
     );
   }
@@ -352,7 +398,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           children: [
             GestureDetector(
               onTap: () => setState(() => showMenuPopup = false),
-              child: Image.asset("assets/images/continue.png", height: 70),
+              child: Image.asset(
+                "assets/games/fairly_multiplication/images/continue.png",
+                height: 70,
+              ),
             ),
             const SizedBox(height: 20),
             GestureDetector(
@@ -362,12 +411,18 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   showHowToPlay = true;
                 });
               },
-              child: Image.asset("assets/images/htp.png", height: 70),
+              child: Image.asset(
+                "assets/games/fairly_multiplication/images/htp.png",
+                height: 70,
+              ),
             ),
             const SizedBox(height: 20),
             GestureDetector(
               onTap: () => Navigator.pop(context),
-              child: Image.asset("assets/images/quit.png", height: 70),
+              child: Image.asset(
+                "assets/games/fairly_multiplication/images/quit.png",
+                height: 70,
+              ),
             ),
           ],
         ),
@@ -384,7 +439,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         children: [
           Center(
             child: Image.asset(
-              "assets/images/how.png",
+              "assets/games/fairly_multiplication/images/how.png",
               width: 300,
               fit: BoxFit.contain,
             ),
@@ -394,7 +449,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             top: MediaQuery.of(context).size.height * 0.36,
             child: GestureDetector(
               onTap: () => setState(() => showHowToPlay = false),
-              child: Image.asset("assets/images/x.png", height: 45),
+              child: Image.asset(
+                "assets/games/fairly_multiplication/images/x.png",
+                height: 45,
+              ),
             ),
           ),
         ],
@@ -409,7 +467,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Image.asset("assets/images/overlay.png", height: 350, width: 450),
+          Image.asset(
+            "assets/games/fairly_multiplication/images/overlay.png",
+            height: 350,
+            width: 450,
+          ),
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -428,7 +490,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Image.asset("assets/images/home.png", height: 60),
+                    child: Image.asset(
+                      "assets/games/fairly_multiplication/images/home.png",
+                      height: 60,
+                    ),
                   ),
                   const SizedBox(width: 15),
                   GestureDetector(
@@ -441,7 +506,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         _loadNextRound();
                       });
                     },
-                    child: Image.asset("assets/images/restart.png", height: 60),
+                    child: Image.asset(
+                      "assets/games/fairly_multiplication/images/restart.png",
+                      height: 60,
+                    ),
                   ),
                 ],
               ),
