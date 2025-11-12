@@ -245,34 +245,7 @@ class _MainMenuScreenState extends State<_MainMenuScreen>
                         assetPath:
                             'assets/games/fairly_multiplication/images/quit.png',
                         width: buttonWidth,
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('Quit'),
-                              content: const Text(
-                                'Do you want to exit the app?',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(ctx).pop(),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(
-                                      context,
-                                    ).pushNamedAndRemoveUntil(
-                                      '/home',
-                                      (route) => false,
-                                    );
-                                  },
-                                  child: const Text('Exit'),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                        onTap: () => _confirmExit(context),
                       ),
                       const SizedBox(height: 40),
                     ],

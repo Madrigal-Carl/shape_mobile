@@ -7,16 +7,22 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'main.dart'; // adjust if needed
+import 'package:shape_mobile/services/game_progress_preference.dart';
 
 class TracingGameScreen extends StatefulWidget {
   final bool isMuted;
   final VoidCallback onToggleMute;
+  final int lessonId;
+  final int studentId;
+  final int gameId;
 
   const TracingGameScreen({
     super.key,
     required this.isMuted,
     required this.onToggleMute,
+    required this.lessonId,
+    required this.studentId,
+    required this.gameId,
   });
 
   @override
@@ -118,13 +124,6 @@ class _TracingGameScreenState extends State<TracingGameScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) => _computeGuideDots());
   }
 
-  Future<void> _playSound(String file) async {
-    if (widget.isMuted) return;
-    try {
-      await _audioPlayer.play(AssetSource('sounds/$file.mp3'));
-    } catch (_) {}
-  }
-
   void _onCompleteLetter() {
     if (_letterCompleted) return; // guard against double
     _letterCompleted = true;
@@ -134,7 +133,6 @@ class _TracingGameScreenState extends State<TracingGameScreen>
     _sustainedCoverageTimer = null;
 
     _confettiController.play();
-    _playSound('letter_complete');
     setState(() => score += 5);
 
     Future.delayed(const Duration(milliseconds: 600), () {
@@ -160,6 +158,12 @@ class _TracingGameScreenState extends State<TracingGameScreen>
         });
 
         if (completedAnimals >= 3) {
+          GameProgressPreference.saveProgress(
+            studentId: widget.studentId,
+            lessonId: widget.lessonId,
+            gameId: widget.gameId,
+            subgameName: 'animal_trace',
+          );
           setState(() => showWinPopup = true);
         } else {
           // Prepare next word (resets _letterCompleted there)
@@ -380,7 +384,10 @@ class _TracingGameScreenState extends State<TracingGameScreen>
                   // continue
                   _closeMenu();
                 },
-                child: Image.asset("assets/images/continue.png", height: 70),
+                child: Image.asset(
+                  "assets/games/animal_trace/images/continue.png",
+                  height: 70,
+                ),
               ),
               const SizedBox(height: 20),
               GestureDetector(
@@ -390,14 +397,20 @@ class _TracingGameScreenState extends State<TracingGameScreen>
                     showHowToPlay = true;
                   });
                 },
-                child: Image.asset("assets/images/htp.png", height: 70),
+                child: Image.asset(
+                  "assets/games/animal_trace/images/htp.png",
+                  height: 70,
+                ),
               ),
               const SizedBox(height: 20),
               GestureDetector(
                 onTap: () {
                   Navigator.pop(context);
                 },
-                child: Image.asset("assets/images/quit.png", height: 70),
+                child: Image.asset(
+                  "assets/games/animal_trace/images/quit.png",
+                  height: 70,
+                ),
               ),
             ],
           ),
@@ -421,308 +434,340 @@ class _TracingGameScreenState extends State<TracingGameScreen>
                             (_guideDots.isEmpty ? 1 : _guideDots.length)))) /
               _letters.length;
 
-    return Scaffold(
-      body: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned.fill(
-            child: Image.asset('assets/images/bg.png', fit: BoxFit.cover),
-          ),
-          Align(
-            alignment: Alignment.center,
-            child: ConfettiWidget(
-              confettiController: _confettiController,
-              blastDirectionality: BlastDirectionality.explosive,
-              emissionFrequency: 0.05,
-              numberOfParticles: 25,
-              gravity: 0.4,
+    return WillPopScope(
+      onWillPop: () async {
+        if (showWinPopup) {
+          return false;
+        }
+        if (showHowToPlay) {
+          setState(() => showHowToPlay = false);
+          return false;
+        }
+        if (showMenuPopup) {
+          _closeMenu();
+          return false;
+        }
+        setState(() {
+          showMenuPopup = true;
+          _menuScaleController.forward(from: 0.0);
+        });
+        return false;
+      },
+      child: Scaffold(
+        body: Stack(
+          alignment: Alignment.center,
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/games/animal_trace/images/bg.png',
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 15),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Image.asset(
-                            'assets/images/scoreplaceholder.png',
-                            width: 200,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 70),
-                            child: Text(
-                              "Score: $score",
-                              style: GoogleFonts.dynaPuff(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      GestureDetector(
-                        onTap: _openMenu,
-                        child: Image.asset('assets/images/menu.png', width: 55),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 50),
-                Text(
-                  "Tracing Game",
-                  style: GoogleFonts.dynaPuff(
-                    fontSize: 36,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    shadows: const [
-                      Shadow(
-                        offset: Offset(2, 2),
-                        blurRadius: 4,
-                        color: Colors.black45,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Use your finger to trace the letter.\nDo not go outside the line!",
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.dynaPuff(
-                    color: Colors.white,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 30),
-                Expanded(
-                  child: Center(
-                    child: Stack(
-                      alignment: Alignment.center,
+            Align(
+              alignment: Alignment.center,
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirectionality: BlastDirectionality.explosive,
+                emissionFrequency: 0.05,
+                numberOfParticles: 25,
+                gravity: 0.4,
+              ),
+            ),
+            SafeArea(
+              child: Column(
+                children: [
+                  const SizedBox(height: 15),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 25),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Image.asset('assets/images/blackboard.png', width: 350),
-                        GestureDetector(
-                          onPanStart: (details) {
-                            final local = _globalToLocalInPaintBox(
-                              details.globalPosition,
-                            );
-                            if (local == null) return;
-
-                            // If guide dots are not yet ready, compute them and allow starting the stroke
-                            if (_guideDots.isEmpty) {
-                              WidgetsBinding.instance.addPostFrameCallback(
-                                (_) => _computeGuideDots(),
-                              );
-                              setState(() {
-                                tracedPoints.add(local);
-                              });
-                              return;
-                            }
-
-                            if (!_isInsideLetter(local)) return;
-                            setState(() => tracedPoints.add(local));
-                            _updateCoverageFromPoints(scheduleDebounce: false);
-                          },
-                          onPanUpdate: (details) {
-                            final local = _globalToLocalInPaintBox(
-                              details.globalPosition,
-                            );
-                            if (local == null) return;
-
-                            // If guide dots are not ready, keep collecting points (user likely started early)
-                            if (_guideDots.isEmpty) {
-                              if (tracedPoints.isEmpty ||
-                                  _distance(tracedPoints.last, local) >
-                                      _pointMinDistance) {
-                                tracedPoints.add(local);
-                                if (tracedPoints.length % 3 == 0)
-                                  setState(() {});
-                              }
-                              return;
-                            }
-
-                            if (!_isInsideLetter(local)) return;
-                            if (tracedPoints.isEmpty ||
-                                _distance(tracedPoints.last, local) >
-                                    _pointMinDistance) {
-                              tracedPoints.add(local);
-                              _updateCoverageFromPoints(scheduleDebounce: true);
-                              if (tracedPoints.length % 3 == 0) setState(() {});
-                            }
-                          },
-                          onPanEnd: (_) {
-                            _coverageDebounceTimer?.cancel();
-                            _coverageDebounceTimer = Timer(
-                              _coverageDebounce,
-                              () => _updateCoverageFromPoints(
-                                scheduleDebounce: false,
-                              ),
-                            );
-                          },
-                          child: Container(
-                            color: Colors.transparent,
-                            child: SizedBox(
-                              key: _paintKey,
-                              width: 300,
-                              height: 220,
-                              child: CustomPaint(
-                                painter: _GuideAndTracePainter(
-                                  letter: currentLetter,
-                                  guideDots: _guideDots,
-                                  coveredDotIndices: _coveredDotIndices,
-                                  tracedPoints: tracedPoints,
-                                  dotRadius: _dotRadius,
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/games/animal_trace/images/scoreplaceholder.png',
+                              width: 200,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 70),
+                              child: Text(
+                                "Score: $score",
+                                style: GoogleFonts.dynaPuff(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
+                          ],
+                        ),
+                        GestureDetector(
+                          onTap: _openMenu,
+                          child: Image.asset(
+                            'assets/games/animal_trace/images/menu.png',
+                            width: 55,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12.0),
-                  child: Column(
-                    children: [
-                      Text(
-                        currentWord,
-                        style: GoogleFonts.poppins(
-                          color: Colors.white70,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
+                  const SizedBox(height: 50),
+                  Text(
+                    "Tracing Game",
+                    style: GoogleFonts.dynaPuff(
+                      fontSize: 36,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      shadows: const [
+                        Shadow(
+                          offset: Offset(2, 2),
+                          blurRadius: 4,
+                          color: Colors.black45,
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        "Trace the letter: \"$currentLetter\" (${_currentLetterIndex + 1}/${_letters.length})",
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: 220,
-                        child: LinearProgressIndicator(
-                          value: wordProgress.clamp(0.0, 1.0),
-                          backgroundColor: Colors.white24,
-                          color: Colors.greenAccent,
-                          minHeight: 8,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        "Completed animals: $completedAnimals / 3",
-                        style: GoogleFonts.poppins(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-          if (showWinPopup)
-            Container(
-              color: Colors.black.withOpacity(0.75),
-              child: Center(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Image.asset("assets/images/complete.png", width: 330),
-                    Positioned(
-                      top: 215,
-                      child: Text(
-                        "Score: $score",
-                        style: GoogleFonts.dynaPuff(
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                      ],
                     ),
-                    Positioned(
-                      bottom: 10,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Use your finger to trace the letter.\nDo not go outside the line!",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.dynaPuff(
+                      color: Colors.white,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  Expanded(
+                    child: Center(
+                      child: Stack(
+                        alignment: Alignment.center,
                         children: [
+                          Image.asset(
+                            'assets/games/animal_trace/images/blackboard.png',
+                            width: 350,
+                          ),
                           GestureDetector(
-                            onTap: () => Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MainMenuScreen(
-                                  isMuted: widget.isMuted,
-                                  onToggleMute: widget.onToggleMute,
+                            onPanStart: (details) {
+                              final local = _globalToLocalInPaintBox(
+                                details.globalPosition,
+                              );
+                              if (local == null) return;
+
+                              // If guide dots are not yet ready, compute them and allow starting the stroke
+                              if (_guideDots.isEmpty) {
+                                WidgetsBinding.instance.addPostFrameCallback(
+                                  (_) => _computeGuideDots(),
+                                );
+                                setState(() {
+                                  tracedPoints.add(local);
+                                });
+                                return;
+                              }
+
+                              if (!_isInsideLetter(local)) return;
+                              setState(() => tracedPoints.add(local));
+                              _updateCoverageFromPoints(
+                                scheduleDebounce: false,
+                              );
+                            },
+                            onPanUpdate: (details) {
+                              final local = _globalToLocalInPaintBox(
+                                details.globalPosition,
+                              );
+                              if (local == null) return;
+
+                              // If guide dots are not ready, keep collecting points (user likely started early)
+                              if (_guideDots.isEmpty) {
+                                if (tracedPoints.isEmpty ||
+                                    _distance(tracedPoints.last, local) >
+                                        _pointMinDistance) {
+                                  tracedPoints.add(local);
+                                  if (tracedPoints.length % 3 == 0)
+                                    setState(() {});
+                                }
+                                return;
+                              }
+
+                              if (!_isInsideLetter(local)) return;
+                              if (tracedPoints.isEmpty ||
+                                  _distance(tracedPoints.last, local) >
+                                      _pointMinDistance) {
+                                tracedPoints.add(local);
+                                _updateCoverageFromPoints(
+                                  scheduleDebounce: true,
+                                );
+                                if (tracedPoints.length % 3 == 0)
+                                  setState(() {});
+                              }
+                            },
+                            onPanEnd: (_) {
+                              _coverageDebounceTimer?.cancel();
+                              _coverageDebounceTimer = Timer(
+                                _coverageDebounce,
+                                () => _updateCoverageFromPoints(
+                                  scheduleDebounce: false,
+                                ),
+                              );
+                            },
+                            child: Container(
+                              color: Colors.transparent,
+                              child: SizedBox(
+                                key: _paintKey,
+                                width: 300,
+                                height: 220,
+                                child: CustomPaint(
+                                  painter: _GuideAndTracePainter(
+                                    letter: currentLetter,
+                                    guideDots: _guideDots,
+                                    coveredDotIndices: _coveredDotIndices,
+                                    tracedPoints: tracedPoints,
+                                    dotRadius: _dotRadius,
+                                  ),
                                 ),
                               ),
-                            ),
-                            child: Image.asset(
-                              "assets/images/home.png",
-                              width: 55,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                score = 0;
-                                completedAnimals = 0;
-                                tracedPoints.clear();
-                                showWinPopup = false;
-                                _nextWord();
-                              });
-                            },
-                            child: Image.asset(
-                              "assets/images/restart.png",
-                              width: 55,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          currentWord,
+                          style: GoogleFonts.poppins(
+                            color: Colors.white70,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          "Trace the letter: \"$currentLetter\" (${_currentLetterIndex + 1}/${_letters.length})",
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: 220,
+                          child: LinearProgressIndicator(
+                            value: wordProgress.clamp(0.0, 1.0),
+                            backgroundColor: Colors.white24,
+                            color: Colors.greenAccent,
+                            minHeight: 8,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          "Completed animals: $completedAnimals / 3",
+                          style: GoogleFonts.poppins(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
-
-          // Menu popup overlay
-          if (showMenuPopup) _buildMenuPopup(),
-
-          // How to play overlay
-          if (showHowToPlay)
-            Container(
-              color: Colors.black.withOpacity(0.7),
-              child: Center(
-                child: Stack(
-                  alignment: Alignment.topRight,
-                  children: [
-                    Image.asset(
-                      "assets/images/how.png",
-                      width: 330,
-                      fit: BoxFit.contain,
-                    ),
-                    GestureDetector(
-                      onTap: () => setState(() => showHowToPlay = false),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Image.asset("assets/images/x.png", height: 40),
+            if (showWinPopup)
+              Container(
+                color: Colors.black.withOpacity(0.75),
+                child: Center(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Image.asset(
+                        "assets/games/animal_trace/images/complete.png",
+                        width: 330,
                       ),
-                    ),
-                  ],
+                      Positioned(
+                        top: 215,
+                        child: Text(
+                          "Score: $score",
+                          style: GoogleFonts.dynaPuff(
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 10,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Image.asset(
+                                "assets/games/animal_trace/images/home.png",
+                                width: 55,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  score = 0;
+                                  completedAnimals = 0;
+                                  tracedPoints.clear();
+                                  showWinPopup = false;
+                                  _nextWord();
+                                });
+                              },
+                              child: Image.asset(
+                                "assets/games/animal_trace/images/restart.png",
+                                width: 55,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-        ],
+
+            // Menu popup overlay
+            if (showMenuPopup) _buildMenuPopup(),
+
+            // How to play overlay
+            if (showHowToPlay)
+              Container(
+                color: Colors.black.withOpacity(0.7),
+                child: Center(
+                  child: Stack(
+                    alignment: Alignment.topRight,
+                    children: [
+                      Image.asset(
+                        "assets/games/animal_trace/images/how.png",
+                        width: 330,
+                        fit: BoxFit.contain,
+                      ),
+                      GestureDetector(
+                        onTap: () => setState(() => showHowToPlay = false),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Image.asset(
+                            "assets/games/animal_trace/images/x.png",
+                            height: 40,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

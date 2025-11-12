@@ -109,6 +109,9 @@ flutter:
     - assets/games/sort_safari/music/
     - assets/games/fairly_multiplication/images/
     - assets/games/fairly_multiplication/music/
+    - assets/games/animal_trace/images/
+    - assets/games/animal_trace/music/
+    - assets/games/animal_trace/fonts/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
