@@ -83,38 +83,54 @@ flutter:
     - assets/flutter/lessons/
     - assets/flutter/rewards/
     - assets/flutter/videos/
+    - assets/games/match_mania/
     - assets/games/match_mania/images/
     - assets/games/match_mania/music/
+    - assets/games/count_quest/
     - assets/games/count_quest/images/
     - assets/games/count_quest/music/
+    - assets/games/finger_addition/
     - assets/games/finger_addition/images/
     - assets/games/finger_addition/music/
+    - assets/games/finger_subtraction/
     - assets/games/finger_subtraction/images/
     - assets/games/finger_subtraction/music/
+    - assets/games/fruit_addition/
     - assets/games/fruit_addition/images/
     - assets/games/fruit_addition/music/
+    - assets/games/fruit_subtraction/
     - assets/games/fruit_subtraction/images/
     - assets/games/fruit_subtraction/music/
+    - assets/games/objectify/
     - assets/games/objectify/images/
     - assets/games/objectify/music/
+    - assets/games/sign_quest/
     - assets/games/sign_quest/images/
     - assets/games/sign_quest/music/
+    - assets/games/cast_spell/
     - assets/games/cast_spell/images/
     - assets/games/cast_spell/music/
+    - assets/games/number_quest/
     - assets/games/number_quest/images/
     - assets/games/number_quest/music/
+    - assets/games/self_care/
     - assets/games/self_care/images/
     - assets/games/self_care/music/
+    - assets/games/sort_safari/
     - assets/games/sort_safari/images/
     - assets/games/sort_safari/music/
+    - assets/games/fairly_multiplication/
     - assets/games/fairly_multiplication/images/
     - assets/games/fairly_multiplication/music/
+    - assets/games/animal_trace/
     - assets/games/animal_trace/images/
     - assets/games/animal_trace/music/
     - assets/games/animal_trace/fonts/
+    - assets/games/shape_trace/
     - assets/games/shape_trace/images/
     - assets/games/shape_trace/music/
     - assets/games/shape_trace/fonts/
+    - assets/games/count_to_100/
     - assets/games/count_to_100/images/
     - assets/games/count_to_100/music/
 

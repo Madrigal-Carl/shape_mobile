@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shape_mobile/services/preference_service.dart';
 import 'package:shape_mobile/db/app_database.dart';
 import 'package:shape_mobile/models/StudentActivityModel.dart';
-import 'package:shape_mobile/services/preference_service.dart';
 import 'package:toastification/toastification.dart';
+
+// Import all your game entry widgets
 import 'match_mania/entry.dart';
 import 'count_quest/entry.dart';
 import 'finger_addition/entry.dart';
@@ -21,98 +23,157 @@ import 'shape_trace/entry.dart';
 import 'count_to_100/entry.dart';
 
 class GameRegistry {
-  static final Map<int, Widget Function(BuildContext, int, int, int)> _games = {
-    1: (context, lessonId, studentId, gameId) => MatchManiaEntry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
+  /// Map of gameId → game entry (builder + thumbnail path)
+  static final Map<int, _GameEntry> _games = {
+    1: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => CountQuestEntry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath: 'assets/games/count_quest/count-quest-icon.png',
     ),
-    2: (context, lessonId, studentId, gameId) => CountQuestEntry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
+    2: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => FingerAdditionEntry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath: 'assets/games/finger_addition/finger-addition-icon.png',
     ),
-    3: (context, lessonId, studentId, gameId) => FingerAdditionEntry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
+    3: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => FruitSubtractionEntry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath:
+          'assets/games/fruit_subtraction/fruit_subtraction-icon.png',
     ),
-    4: (context, lessonId, studentId, gameId) => FruitSubtractionEntry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
+    4: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => ObjectifyEntry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath: 'assets/games/objectify/objectify-icon.png',
     ),
-    5: (context, lessonId, studentId, gameId) => ObjectifyEntry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
+    5: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => FruitAdditionEntry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath: 'assets/games/fruit_addition/fruit-addition-icon.png',
     ),
-    6: (context, lessonId, studentId, gameId) => FruitAdditionEntry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
+    6: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => FingerSubtractionEntry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath:
+          'assets/games/finger_subtraction/finger-subtraction-icon.png',
     ),
-    7: (context, lessonId, studentId, gameId) => FingerSubtractionEntry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
+    7: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => SignQuestEntry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath: 'assets/games/sign_quest/sign-quest-icon.png',
     ),
-    8: (context, lessonId, studentId, gameId) => SignQuestEntry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
+    8: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => CastSpellEntry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath: 'assets/games/cast_spell/cast-spell-icon.png',
     ),
-    9: (context, lessonId, studentId, gameId) => CastSpellEntry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
+    9: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => NumberQuestEntry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath: 'assets/games/number_quest/number-quest-icon.png',
     ),
-    10: (context, lessonId, studentId, gameId) => NumberQuestEntry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
+    10: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => SelfCareEntry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath: 'assets/games/count_quest/count-quest-icon.png',
     ),
-    11: (context, lessonId, studentId, gameId) =>
-        SelfCareEntry(lessonId: lessonId, studentId: studentId, gameId: gameId),
-    12: (context, lessonId, studentId, gameId) => SortSafariEntry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
+    11: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => SortSafariEntry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath: 'assets/games/sort_safari/sort-safari-icon.png',
     ),
-    13: (context, lessonId, studentId, gameId) => FairlyMultiplicationEntry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
+    12: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) =>
+          FairlyMultiplicationEntry(
+            lessonId: lessonId,
+            studentId: studentId,
+            gameId: gameId,
+          ),
+      thumbnailPath:
+          'assets/games/fairly_multiplication/the-fairly-multiflication.png',
     ),
-    14: (context, lessonId, studentId, gameId) => AnimalTraceEntry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
+    13: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => AnimalTraceEntry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath: 'assets/games/count_quest/count-quest-icon.png',
     ),
-    15: (context, lessonId, studentId, gameId) => ShapeTraceEntry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
+    14: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => ShapeTraceEntry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath: 'assets/games/count_quest/count-quest-icon.png',
     ),
-    17: (context, lessonId, studentId, gameId) => CountTo100Entry(
-      lessonId: lessonId,
-      studentId: studentId,
-      gameId: gameId,
+    15: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => CountTo100Entry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath: 'assets/games/count_quest/count-quest-icon.png',
+    ),
+    16: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => MatchManiaEntry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath: 'assets/games/match_mania/math-mania-icon.png',
     ),
   };
 
+  /// Get all registered game IDs
   static List<int> get allGameIds => _games.keys.toList();
 
-  /// Centralized game launcher
+  /// Get the game entry for a specific ID
+  static _GameEntry? getGameEntry(int gameId) => _games[gameId];
+
+  /// Launch a game by its ID
   static Future<void> launchGameById({
     required BuildContext context,
     required int gameId,
     required int lessonId,
   }) async {
     final db = AppDatabase.instance;
-
-    // 🔹 Step 1: Get logged-in student ID
     final studentId = PreferenceService.studentId;
+
     if (studentId == null) {
       toastification.showError(
         context: context,
@@ -123,7 +184,6 @@ class GameRegistry {
       return;
     }
 
-    // 🔹 Step 2: Verify that the game is linked to this lesson
     final link = await db.fetchGameLessonLink(lessonId, gameId);
     if (link == null) {
       toastification.showError(
@@ -136,8 +196,6 @@ class GameRegistry {
     }
 
     final linkId = link['id'] as int;
-
-    // 🔹 Step 3: Check student’s previous activity
     final studentActivityMap = await db.fetchStudentGameActivity(
       studentId: studentId,
       activityLessonId: linkId,
@@ -156,10 +214,9 @@ class GameRegistry {
       }
     }
 
-    // 🔹 Step 4: Open the game
-    final builder = _games[gameId];
-    if (builder != null) {
-      final gameWidget = builder(context, lessonId, studentId, gameId);
+    final entry = _games[gameId];
+    if (entry != null) {
+      final gameWidget = entry.builder(context, lessonId, studentId, gameId);
       Navigator.push(context, MaterialPageRoute(builder: (_) => gameWidget));
     } else {
       toastification.showError(
@@ -170,4 +227,12 @@ class GameRegistry {
       );
     }
   }
+}
+
+/// Internal class to store builder + thumbnail
+class _GameEntry {
+  final Widget Function(BuildContext, int, int, int) builder;
+  final String thumbnailPath;
+
+  _GameEntry({required this.builder, required this.thumbnailPath});
 }

@@ -114,7 +114,6 @@ class _GameCollectionWidgetState extends State<GameCollectionWidget> {
             children: _groupedGames.entries.map((entry) {
               final subject = entry.key;
               final games = entry.value;
-
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 spacing: 4,
@@ -139,6 +138,8 @@ class _GameCollectionWidgetState extends State<GameCollectionWidget> {
                     childAspectRatio: widget.lessonId == null ? 1.1 : 1.3,
                     children: games.map((item) {
                       final game = item['game'] as GameActivity;
+                      final entry = GameRegistry.getGameEntry(game.id);
+
                       return Material(
                         borderRadius: BorderRadius.circular(12),
                         clipBehavior: Clip.antiAlias,
@@ -161,11 +162,17 @@ class _GameCollectionWidgetState extends State<GameCollectionWidget> {
                                   width: double.infinity,
                                   height: 100,
                                   color: Colors.blue.shade100,
-                                  child: const Icon(
-                                    Icons.videogame_asset_rounded,
-                                    size: 60,
-                                    color: Colors.blueAccent,
-                                  ),
+
+                                  child: entry != null
+                                      ? Image.asset(
+                                          entry.thumbnailPath,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : const Icon(
+                                          Icons.videogame_asset_rounded,
+                                          size: 60,
+                                          color: Colors.blueAccent,
+                                        ),
                                 ),
                               ),
                               Padding(
