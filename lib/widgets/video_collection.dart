@@ -6,7 +6,6 @@ import 'package:shape_mobile/models/LessonModel.dart';
 import 'video_player_screen.dart';
 import 'package:shape_mobile/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:toastification/toastification.dart';
 
 class VideoCollectionWidget extends StatefulWidget {
   final String title;
@@ -29,22 +28,58 @@ class _VideoCollectionWidgetState extends State<VideoCollectionWidget> {
     _fetchVideos();
   }
 
+  String getYoutubeVideoUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+
+      // Handle youtu.be short links
+      if (uri.host.contains('youtu.be')) {
+        final videoId = uri.pathSegments.isNotEmpty
+            ? uri.pathSegments[0]
+            : null;
+        if (videoId != null) return 'https://www.youtube.com/watch?v=$videoId';
+      }
+
+      // Handle regular youtube.com links
+      if (uri.host.contains('youtube.com')) {
+        final videoId = uri.queryParameters['v'];
+        if (videoId != null && videoId.isNotEmpty) {
+          return 'https://www.youtube.com/watch?v=$videoId';
+        }
+      }
+
+      // Fallback to original URL
+      return url;
+    } catch (e) {
+      return url;
+    }
+  }
+
+  Future<void> launchYoutubeUrl(String url) async {
+    final safeUrl = getYoutubeVideoUrl(url);
+    final uri = Uri.parse(safeUrl);
+
+    try {
+      // Try launching in external application (YouTube app)
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        // Fallback: launch in default browser
+        await launchUrl(uri, mode: LaunchMode.platformDefault);
+      }
+    } catch (e) {
+      // Show error if everything fails
+      print('Could not launch YouTube URL: $e');
+    }
+  }
+
   Future<void> _handleVideoTap(Video video) async {
     final url = video.url;
 
     if (url.contains('youtube.com') || url.contains('youtu.be')) {
-      final Uri uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        toastification.showError(
-          context: context,
-          title: 'Could not open YouTube link.',
-          autoCloseDuration: const Duration(seconds: 5),
-          padding: const EdgeInsets.all(10),
-        );
-      }
+      await launchYoutubeUrl(url);
     } else {
+      // For other video URLs, open in-app player
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => VideoPlayerScreen(videoUrl: url)),
