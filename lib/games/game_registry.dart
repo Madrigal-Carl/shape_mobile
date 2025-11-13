@@ -21,7 +21,6 @@ import 'shape_trace/entry.dart';
 
 class GameRegistry {
   static final Map<int, Widget Function(BuildContext, int, int, int)> _games = {
-    // 5, 8, 20
     1: (context, lessonId, studentId, gameId) => MatchManiaEntry(
       lessonId: lessonId,
       studentId: studentId,
@@ -89,7 +88,7 @@ class GameRegistry {
       studentId: studentId,
       gameId: gameId,
     ),
-    17: (context, lessonId, studentId, gameId) => ShapeTraceEntry(
+    15: (context, lessonId, studentId, gameId) => ShapeTraceEntry(
       lessonId: lessonId,
       studentId: studentId,
       gameId: gameId,
