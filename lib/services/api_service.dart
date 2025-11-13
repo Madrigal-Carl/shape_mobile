@@ -209,6 +209,22 @@ class AuthService {
         throw ApiException(data['message'] ?? "Failed to fetch student data");
       }
 
+      // ✅ NEW: Handle new school year reset
+      if (data['new_school_year'] == true) {
+        onProgress?.call("New school year detected. Logging out...");
+
+        final logoutSuccess = await logout();
+
+        if (logoutSuccess) {
+          print("🧹 Logged out due to new school year.");
+          await _prefs.clearPreferences();
+          await AppDatabase.instance.clearAllTables();
+          await AppDatabase.instance.close();
+          await _clearLocalFiles();
+          throw ApiException("new_school_year");
+        }
+      }
+
       // 3️⃣ Extract JSON
       final studentJson = data['student'];
       final lessonsJson = data['lessons'] ?? [];
