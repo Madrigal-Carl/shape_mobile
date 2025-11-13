@@ -67,6 +67,7 @@ class AuthService {
           if (localMediaPath == null) {
             throw ApiException("Failed to download student profile image");
           }
+          await PreferenceService.saveDownloadedFile(mediaUrl, localMediaPath);
           studentJson['path'] = localMediaPath;
         }
 
@@ -82,7 +83,10 @@ class AuthService {
             if (localThumbPath == null) {
               return false;
             }
-
+            await PreferenceService.saveDownloadedFile(
+              thumbnailUrl,
+              localThumbPath,
+            );
             videoJson['thumbnail'] = localThumbPath;
           }
         }
@@ -94,6 +98,7 @@ class AuthService {
             if (localAwardPath == null) {
               return false;
             }
+            await PreferenceService.saveDownloadedFile(pathUrl, localAwardPath);
             awardJson['path'] = localAwardPath;
           }
         }
@@ -107,6 +112,7 @@ class AuthService {
       onProgress?.call("Saving data locally...");
       await _prefs.saveLoginData(
         token: data['token'],
+        latestSchoolYearId: data['current_school_year_id'],
         studentId: studentJson['id'],
         fullname: studentJson['fullname'],
         lrn: studentJson['lrn'],
@@ -171,7 +177,6 @@ class AuthService {
     if (studentId == null) return false;
 
     final db = AppDatabase.instance;
-    final lastSyncTime = PreferenceService.lastSyncTime;
     final url = Uri.parse("$baseUrl/student/sync-all");
     final token = PreferenceService.token;
 
@@ -184,6 +189,10 @@ class AuthService {
 
     // 2️⃣ Fetch data from server
     onProgress?.call("Fetching updated student data...");
+    print("Sending sync request...");
+    print("student_id: $studentId");
+    print("last_sync_time: ${PreferenceService.lastSyncTime}");
+    print("last_school_year_id: ${PreferenceService.latestSchoolYearId}");
     try {
       final response = await http
           .post(
@@ -194,7 +203,8 @@ class AuthService {
             },
             body: jsonEncode({
               'student_id': studentId,
-              'last_sync_time': lastSyncTime,
+              'last_sync_time': PreferenceService.lastSyncTime,
+              'last_school_year_id': PreferenceService.latestSchoolYearId,
             }),
           )
           .timeout(
@@ -221,7 +231,7 @@ class AuthService {
           await AppDatabase.instance.clearAllTables();
           await AppDatabase.instance.close();
           await _clearLocalFiles();
-          throw ApiException("new_school_year");
+          throw ApiException("New School Year");
         }
       }
 
@@ -239,8 +249,14 @@ class AuthService {
       final reset = data['reset'] == true;
 
       if (reset) {
-        onProgress?.call("Reset detected. Resetting local data...");
-        await db.clearAllTables();
+        onProgress?.call("Reset detected. Clearing selected local tables...");
+
+        // Clear only specific tables
+        await db.deleteGameActivityLessonTable();
+        await db.deleteGameActivityTable();
+        await db.deleteVideoTable();
+        await db.deleteLessonTable();
+        await db.deleteStudentActivityTable();
       }
 
       // -----------------------
@@ -249,16 +265,18 @@ class AuthService {
       Future<String?> getOrDownloadFile(String? remoteUrl) async {
         if (remoteUrl == null || remoteUrl.isEmpty) return null;
 
-        final filename = remoteUrl.split('/').last;
-        final localDir = await getApplicationDocumentsDirectory();
-        final localFilePath = '${localDir.path}/$filename';
-        final localFile = File(localFilePath);
+        String? cachedPath = await PreferenceService.getDownloadedFile(
+          remoteUrl,
+        );
+        if (cachedPath != null && await File(cachedPath).exists()) {
+          return cachedPath;
+        }
 
-        // Reuse if exists
-        if (await localFile.exists()) return localFilePath;
-
-        // Otherwise, download
-        return await downloadFileToLocal(remoteUrl);
+        final localPath = await downloadFileToLocal(remoteUrl);
+        if (localPath != null) {
+          await PreferenceService.saveDownloadedFile(remoteUrl, localPath);
+        }
+        return localPath;
       }
 
       // -----------------------
@@ -277,9 +295,6 @@ class AuthService {
         if (video['thumbnail'] != null) {
           video['thumbnail'] =
               await getOrDownloadFile(video['thumbnail']) ?? video['thumbnail'];
-        }
-        if (video['url'] != null) {
-          video['url'] = await getOrDownloadFile(video['url']) ?? video['url'];
         }
       }
 

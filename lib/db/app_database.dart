@@ -627,6 +627,51 @@ class AppDatabase {
     print("🧹 All SQLite tables cleared.");
   }
 
+  // -----------------------
+  // Clear specific tables
+  // -----------------------
+
+  Future<void> deleteLessonTable() async {
+    final db = await database;
+    await db.delete(lessonsTable);
+  }
+
+  Future<void> deleteVideoTable() async {
+    final db = await database;
+
+    // Delete local files first
+    final videos = await db.query(videosTable, columns: ['thumbnail', 'url']);
+    for (final video in videos) {
+      final thumb = video['thumbnail'] as String?;
+      final url = video['url'] as String?;
+      if (thumb != null && thumb.isNotEmpty) {
+        final file = File(thumb);
+        if (await file.exists()) await file.delete();
+      }
+      if (url != null && url.isNotEmpty) {
+        final file = File(url);
+        if (await file.exists()) await file.delete();
+      }
+    }
+
+    await db.delete(videosTable);
+  }
+
+  Future<void> deleteGameActivityTable() async {
+    final db = await database;
+    await db.delete(gameActivitiesTable);
+  }
+
+  Future<void> deleteGameActivityLessonTable() async {
+    final db = await database;
+    await db.delete(gameActivityLessonsTable);
+  }
+
+  Future<void> deleteStudentActivityTable() async {
+    final db = await database;
+    await db.delete(studentActivitiesTable);
+  }
+
   /// Development helper: delete database file completely
   Future<void> deleteDatabaseFile() async {
     final databasesPath = await getDatabasesPath();

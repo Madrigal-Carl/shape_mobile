@@ -1,11 +1,14 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shape_mobile/models/LessonModel.dart';
+import 'dart:convert';
+import 'dart:io';
 
 class PreferenceService {
   // 🔹 Cached values
   static bool isLoggedIn = false;
   static int? studentId;
   static String? token;
+  static int? latestSchoolYearId;
   static String? fullname;
   static String? lrn;
   static String? avatarPath;
@@ -19,6 +22,7 @@ class PreferenceService {
     final prefs = await SharedPreferences.getInstance();
     isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
     studentId = prefs.getInt('student_id');
+    latestSchoolYearId = prefs.getInt('latest_school_year_id');
     token = prefs.getString('token');
     fullname = prefs.getString('fullname');
     lrn = prefs.getString('lrn');
@@ -31,6 +35,7 @@ class PreferenceService {
 
   /// Save login data and cache them
   Future<void> saveLoginData({
+    required int latestSchoolYearId,
     required String token,
     required int studentId,
     required String fullname,
@@ -40,6 +45,7 @@ class PreferenceService {
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool("isLoggedIn", true);
+    await prefs.setInt("latest_school_year_id", latestSchoolYearId);
     await prefs.setInt("student_id", studentId);
     await prefs.setString("token", token);
     await prefs.setString("fullname", fullname);
@@ -53,6 +59,7 @@ class PreferenceService {
     // 🔹 Update cache immediately
     PreferenceService.isLoggedIn = true;
     PreferenceService.studentId = studentId;
+    PreferenceService.latestSchoolYearId = latestSchoolYearId;
     PreferenceService.token = token;
     PreferenceService.fullname = fullname;
     PreferenceService.lrn = lrn;
@@ -65,6 +72,9 @@ class PreferenceService {
     final prefs = await SharedPreferences.getInstance();
     PreferenceService.isLoggedIn = prefs.getBool("isLoggedIn") ?? false;
     PreferenceService.studentId = prefs.getInt("student_id");
+    PreferenceService.latestSchoolYearId = prefs.getInt(
+      "latest_school_year_id",
+    );
     PreferenceService.token = prefs.getString("token");
     PreferenceService.fullname = prefs.getString("fullname");
     PreferenceService.lrn = prefs.getString("lrn");
@@ -74,10 +84,7 @@ class PreferenceService {
   /// Save the current time as last sync
   static Future<void> saveLastSyncTime(DateTime time) async {
     final prefs = await SharedPreferences.getInstance();
-
-    // Ensure it's in Asia/Manila timezone
-    final localTime = time.toLocal();
-    final formatted = localTime.toIso8601String();
+    final formatted = time.toUtc().toIso8601String();
 
     await prefs.setString('last_sync_time', formatted);
     lastSyncTime = formatted;
@@ -105,6 +112,7 @@ class PreferenceService {
     // Reset cache
     PreferenceService.isLoggedIn = false;
     PreferenceService.studentId = null;
+    PreferenceService.latestSchoolYearId = null;
     PreferenceService.token = null;
     PreferenceService.fullname = null;
     PreferenceService.lrn = null;
@@ -119,5 +127,46 @@ class PreferenceService {
 
     latestLessonId = lesson.id;
     latestLessonTitle = lesson.title;
+  }
+
+  static const _downloadedFilesKey = 'downloaded_files';
+
+  /// Save a downloaded file path for a given URL
+  static Future<void> saveDownloadedFile(String url, String localPath) async {
+    final prefs = await SharedPreferences.getInstance();
+    final map = _getDownloadedFilesMap(prefs);
+    map[url] = localPath;
+    await prefs.setString(_downloadedFilesKey, jsonEncode(map));
+  }
+
+  /// Get the local file path for a given URL
+  static Future<String?> getDownloadedFile(String url) async {
+    final prefs = await SharedPreferences.getInstance();
+    final map = _getDownloadedFilesMap(prefs);
+    final path = map[url];
+    if (path != null && await File(path).exists()) {
+      return path;
+    }
+    return null;
+  }
+
+  /// Load the map of downloaded files
+  static Map<String, String> _getDownloadedFilesMap(SharedPreferences prefs) {
+    final jsonString = prefs.getString(_downloadedFilesKey);
+    if (jsonString == null) return {};
+    try {
+      final decoded = jsonDecode(jsonString);
+      return Map<String, String>.from(decoded);
+    } catch (_) {
+      return {};
+    }
+  }
+
+  /// Remove a file record (optional: after deletion)
+  static Future<void> removeDownloadedFile(String url) async {
+    final prefs = await SharedPreferences.getInstance();
+    final map = _getDownloadedFilesMap(prefs);
+    map.remove(url);
+    await prefs.setString(_downloadedFilesKey, jsonEncode(map));
   }
 }

@@ -188,7 +188,7 @@ class ListItems extends StatelessWidget {
               if (success) {
                 toastification.showSuccess(
                   context: context,
-                  title: 'Activities synced successfully!',
+                  title: 'Synced successfully!',
                   autoCloseDuration: const Duration(seconds: 5),
                   padding: const EdgeInsets.all(10),
                 );
@@ -206,6 +206,17 @@ class ListItems extends StatelessWidget {
               if (context.mounted) {
                 Navigator.of(context, rootNavigator: true).pop();
               }
+
+              if (e.message == "New School Year") {
+                // ✅ Redirect to login/home
+                if (context.mounted) {
+                  Navigator.of(
+                    context,
+                  ).pushNamedAndRemoveUntil('/', (route) => false);
+                }
+                return;
+              }
+
               if (context.mounted) {
                 toastification.showError(
                   context: context,
