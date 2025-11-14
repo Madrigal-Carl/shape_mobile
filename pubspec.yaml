@@ -140,6 +140,9 @@ flutter:
     - assets/games/tracing_time/images/
     - assets/games/tracing_time/music/
     - assets/games/tracing_time/fonts/
+    - assets/games/balloon_pop/
+    - assets/games/balloon_pop/images/
+    - assets/games/balloon_pop/music/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

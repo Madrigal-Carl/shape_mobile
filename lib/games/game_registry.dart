@@ -23,6 +23,7 @@ import 'shape_trace/entry.dart';
 import 'count_to_100/entry.dart';
 import 'emotion_test/entry.dart';
 import 'tracing_time/entry.dart';
+import 'balloon_pop/entry.dart';
 
 class GameRegistry {
   /// Map of gameId → game entry (builder + thumbnail path)
@@ -169,6 +170,14 @@ class GameRegistry {
     ),
     18: _GameEntry(
       builder: (context, lessonId, studentId, gameId) => TracingTimeEntry(
+        lessonId: lessonId,
+        studentId: studentId,
+        gameId: gameId,
+      ),
+      thumbnailPath: 'assets/games/count_quest/count-quest-icon.png',
+    ),
+    19: _GameEntry(
+      builder: (context, lessonId, studentId, gameId) => BalloonPopEntry(
         lessonId: lessonId,
         studentId: studentId,
         gameId: gameId,
