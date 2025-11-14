@@ -36,7 +36,14 @@ class _HomeScreenState extends State<HomeScreen> {
               const GreetingWidget(),
               const RecentLessonWidget(),
               CasualGamesSection(
-                games: [CasualGame(id: 19, title: "Count Quest")],
+                games: [
+                  CasualGame(
+                    id: 1,
+                    title: "Match a Pair",
+                    thumbnailPath:
+                        "assets/games/count_quest/count-quest-icon.png",
+                  ),
+                ],
               ),
             ],
           ),

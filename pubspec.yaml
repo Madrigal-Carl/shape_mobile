@@ -51,6 +51,7 @@ dependencies:
   confetti: ^0.7.0
   audioplayers: ^6.0.0
   url_launcher: ^6.3.2
+  flame_audio: ^2.11.11
 
 dev_dependencies:
   flutter_test:
@@ -143,6 +144,14 @@ flutter:
     - assets/games/balloon_pop/
     - assets/games/balloon_pop/images/
     - assets/games/balloon_pop/music/
+    - assets/casual_games/match_a_pair/
+    - assets/casual_games/match_a_pair/images/
+    - assets/casual_games/match_a_pair/images/cards/
+    - assets/casual_games/match_a_pair/images/combos/
+    - assets/casual_games/match_a_pair/images/figures/
+    - assets/casual_games/match_a_pair/audio/
+    - assets/casual_games/match_a_pair/audio/combos/
+    - assets/casual_games/match_a_pair/fonts/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -1,35 +1,47 @@
 import 'package:flutter/material.dart';
-import 'package:shape_mobile/games/game_registry.dart';
 import 'package:shape_mobile/utils.dart';
+import 'package:toastification/toastification.dart';
+import 'package:shape_mobile/casual_games/match_a_pair/main.dart';
 
 class CasualGameCard extends StatelessWidget {
   final int gameId;
   final String title;
+  final String thumbnailPath;
 
-  const CasualGameCard({super.key, required this.gameId, required this.title});
+  const CasualGameCard({
+    super.key,
+    required this.gameId,
+    required this.title,
+    required this.thumbnailPath,
+  });
+
+  void _launchGame(BuildContext context, int gameId) {
+    switch (gameId) {
+      case 1:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const MatchAPairApp()),
+        );
+        break;
+      default:
+        toastification.showError(
+          context: context,
+          title: 'Game not available',
+          autoCloseDuration: const Duration(seconds: 5),
+          padding: const EdgeInsets.all(10),
+        );
+        return;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final entry = GameRegistry.getGameEntry(gameId);
-    if (entry == null) return const SizedBox();
-
     return Material(
       borderRadius: BorderRadius.circular(12),
       clipBehavior: Clip.antiAlias,
       color: Colors.white,
       child: InkWell(
-        onTap: () {
-          final gameWidget = entry.builder(
-            context,
-            0,
-            0,
-            gameId,
-          ); // no student or lesson
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => gameWidget),
-          );
-        },
+        onTap: () => _launchGame(context, gameId),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -40,7 +52,10 @@ class CasualGameCard extends StatelessWidget {
                 width: double.infinity,
                 height: 100,
                 color: Colors.blue.shade100,
-                child: Image.asset(entry.thumbnailPath, fit: BoxFit.cover),
+                child: Image.asset(
+                  thumbnailPath,
+                  fit: BoxFit.cover,
+                ), // Placeholder thumbnail
               ),
             ),
             Padding(
@@ -66,8 +81,13 @@ class CasualGameCard extends StatelessWidget {
 class CasualGame {
   final int id;
   final String title;
+  final String thumbnailPath;
 
-  CasualGame({required this.id, required this.title});
+  CasualGame({
+    required this.id,
+    required this.title,
+    required this.thumbnailPath,
+  });
 }
 
 // Wrapper widget with header
@@ -102,7 +122,11 @@ class CasualGamesSection extends StatelessWidget {
             childAspectRatio: 1.2,
             children: games
                 .map(
-                  (game) => CasualGameCard(gameId: game.id, title: game.title),
+                  (game) => CasualGameCard(
+                    gameId: game.id,
+                    title: game.title,
+                    thumbnailPath: game.thumbnailPath,
+                  ),
                 )
                 .toList(),
           ),
