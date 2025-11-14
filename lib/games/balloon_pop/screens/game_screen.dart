@@ -132,7 +132,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void _showFloatingLetter(Balloon b) async {
     if (b.letter == null) return;
     final overlay = Overlay.of(context);
-    if (overlay == null) return;
 
     final entry = OverlayEntry(
       builder: (_) => AnimatedLetter(letter: b.letter!, startX: b.startX),

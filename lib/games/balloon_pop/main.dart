@@ -177,13 +177,6 @@ class _BalloonPopMainMenuState extends State<_BalloonPopMainMenu>
     );
   }
 
-  Future<void> _resetPortraitOrientation() async {
-    await SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
-  }
-
   void _confirmExit(BuildContext context) {
     showDialog(
       context: context,
@@ -197,7 +190,6 @@ class _BalloonPopMainMenuState extends State<_BalloonPopMainMenu>
           ),
           TextButton(
             onPressed: () async {
-              await _resetPortraitOrientation();
               Navigator.of(
                 context,
               ).pushNamedAndRemoveUntil('/home', (route) => false);
