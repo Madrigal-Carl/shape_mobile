@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shape_mobile/services/preference_service.dart';
+import 'package:shape_mobile/utils.dart';
 
 class GreetingWidget extends StatelessWidget {
   const GreetingWidget({super.key});
@@ -44,7 +45,7 @@ class GreetingWidget extends StatelessWidget {
                 style: const TextStyle(fontSize: 14, color: Colors.black54),
               ),
               Text(
-                PreferenceService.fullname ?? 'Guest',
+                toTitleCase(PreferenceService.fullname ?? 'Guest'),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
