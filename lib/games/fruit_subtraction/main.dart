@@ -289,6 +289,7 @@ class _MainMenuScreenState extends State<_MainMenuScreen>
           ),
           TextButton(
             onPressed: () {
+              Navigator.of(context).pop();
               Navigator.of(
                 context,
               ).pushNamedAndRemoveUntil('/home', (route) => false);

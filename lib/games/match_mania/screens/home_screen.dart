@@ -53,9 +53,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: const Text('Cancel'),
               ),
               TextButton(
-                onPressed: () => Navigator.of(
-                  context,
-                ).pushNamedAndRemoveUntil('/home', (route) => false),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(
+                    context,
+                  ).pushNamedAndRemoveUntil('/home', (route) => false);
+                },
                 child: const Text('Yes'),
               ),
             ],
@@ -117,6 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             TextButton(
                               onPressed: () {
+                                Navigator.of(context).pop();
                                 Navigator.of(context).pushNamedAndRemoveUntil(
                                   '/home',
                                   (route) => false,

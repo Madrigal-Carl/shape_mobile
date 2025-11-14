@@ -60,6 +60,7 @@ class HomeScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
+              Navigator.of(ctx).pop();
               Navigator.of(
                 context,
               ).pushNamedAndRemoveUntil('/home', (route) => false);

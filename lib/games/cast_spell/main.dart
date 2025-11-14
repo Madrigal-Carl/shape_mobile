@@ -151,6 +151,7 @@ class _MainMenuScreenState extends State<_MainMenuScreen>
     );
 
     if (shouldExit == true) {
+      Navigator.of(context).pop();
       Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
     }
 
@@ -224,11 +225,15 @@ class _MainMenuScreenState extends State<_MainMenuScreen>
                                   child: const Text("Cancel"),
                                 ),
                                 TextButton(
-                                  onPressed: () => Navigator.of(context)
-                                      .pushNamedAndRemoveUntil(
-                                        '/home',
-                                        (route) => false,
-                                      ),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    Navigator.of(
+                                      context,
+                                    ).pushNamedAndRemoveUntil(
+                                      '/home',
+                                      (route) => false,
+                                    );
+                                  },
                                   child: const Text("Exit"),
                                 ),
                               ],

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_audio/bgm.dart';
-import 'package:shape_mobile/screens/default.dart';
 import 'gameplay_screen.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -111,10 +110,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 onPressed: () {
                   FlameAudio.audioCache.clear('CLICK.wav');
                   FlameAudio.play('CLICK.wav', volume: 1.0);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => DefaultLayout()),
-                  );
+                  Navigator.pushReplacementNamed(context, '/home');
                 },
               ),
             ],

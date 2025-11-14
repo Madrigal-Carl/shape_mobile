@@ -190,6 +190,7 @@ class _BalloonPopMainMenuState extends State<_BalloonPopMainMenu>
           ),
           TextButton(
             onPressed: () async {
+              Navigator.of(ctx).pop();
               Navigator.of(
                 context,
               ).pushNamedAndRemoveUntil('/home', (route) => false);
