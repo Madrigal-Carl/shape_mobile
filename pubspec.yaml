@@ -133,6 +133,9 @@ flutter:
     - assets/games/count_to_100/
     - assets/games/count_to_100/images/
     - assets/games/count_to_100/music/
+    - assets/games/emotion_test/
+    - assets/games/emotion_test/images/
+    - assets/games/emotion_test/music/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
