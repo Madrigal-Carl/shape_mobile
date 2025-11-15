@@ -17,12 +17,19 @@ class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
 
   bool _isLoading = false;
+  bool _obscureText = true;
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _toggleObscure() {
+    setState(() {
+      _obscureText = !_obscureText;
+    });
   }
 
   Future<void> _handleLogin() async {
@@ -138,19 +145,29 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             TextField(
               controller: _passwordController,
-              obscureText: true,
+              obscureText: _obscureText,
               decoration: InputDecoration(
                 labelText: 'Password',
-                labelStyle: TextStyle(color: Colors.black54),
+                labelStyle: const TextStyle(color: Colors.black54),
                 border: OutlineInputBorder(
                   borderSide: BorderSide.none,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 filled: true,
                 fillColor: const Color(0xFFEFF7F8),
-                contentPadding: EdgeInsets.symmetric(
+                contentPadding: const EdgeInsets.symmetric(
                   vertical: 10,
                   horizontal: 24,
+                ),
+                suffixIcon: Padding(
+                  padding: const EdgeInsets.only(right: 10.0),
+                  child: IconButton(
+                    icon: Icon(
+                      _obscureText ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.black38,
+                    ),
+                    onPressed: _toggleObscure,
+                  ),
                 ),
               ),
             ),
