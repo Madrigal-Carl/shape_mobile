@@ -85,7 +85,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 onPressed: () {
                   showDialog(
                     context: context,
-                    builder: (_) => AlertDialog(
+                    builder: (dialogContext) => AlertDialog(
                       title: const Text('How to Play'),
                       content: const Text(
                         'Find all matching pairs. Tap two cards to flip them. Match shapes to score!',
@@ -95,7 +95,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                           onPressed: () {
                             FlameAudio.audioCache.clear('CLICK.wav');
                             FlameAudio.play('CLICK.wav', volume: 1.0);
-                            Navigator.pop(context);
+                            Navigator.of(dialogContext).pop();
                           },
                           child: const Text('OK'),
                         ),

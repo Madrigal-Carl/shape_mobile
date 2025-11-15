@@ -41,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     id: 1,
                     title: "Match a Pair",
                     thumbnailPath:
-                        "assets/games/count_quest/count-quest-icon.png",
+                        "assets/casual_games/match_a_pair/match-and-pair-icon.png",
                   ),
                 ],
               ),
