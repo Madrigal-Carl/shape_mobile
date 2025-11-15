@@ -51,7 +51,7 @@ class GameRegistry {
         gameId: gameId,
       ),
       thumbnailPath:
-          'assets/games/fruit_subtraction/fruit_subtraction-icon.png',
+          'assets/games/fruit_subtraction/fruit-subtraction-icon.png',
     ),
     4: _GameEntry(
       builder: (context, lessonId, studentId, gameId) => ObjectifyEntry(
