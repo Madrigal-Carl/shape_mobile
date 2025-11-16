@@ -52,6 +52,7 @@ dependencies:
   audioplayers: ^6.0.0
   url_launcher: ^6.3.2
   flame_audio: ^2.11.11
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -190,3 +191,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/flutter/images/app_logo.png"

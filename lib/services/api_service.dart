@@ -23,7 +23,7 @@ class ApiException implements Exception {
 }
 
 class AuthService {
-  final String baseUrl = "http://10.0.2.2:8000/api";
+  final String baseUrl = "https://145.79.13.96/api";
   final PreferenceService _prefs = PreferenceService();
 
   Future<bool> loginStudent(
