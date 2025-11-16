@@ -108,7 +108,7 @@ class GameRegistry {
         studentId: studentId,
         gameId: gameId,
       ),
-      thumbnailPath: 'assets/games/count_quest/count-quest-icon.png',
+      thumbnailPath: 'assets/games/self_care/care-for-yourself-icon.png',
     ),
     11: _GameEntry(
       builder: (context, lessonId, studentId, gameId) => SortSafariEntry(
@@ -134,7 +134,7 @@ class GameRegistry {
         studentId: studentId,
         gameId: gameId,
       ),
-      thumbnailPath: 'assets/games/count_quest/count-quest-icon.png',
+      thumbnailPath: 'assets/games/animal_trace/animal-trace.png',
     ),
     14: _GameEntry(
       builder: (context, lessonId, studentId, gameId) => ShapeTraceEntry(
@@ -142,7 +142,7 @@ class GameRegistry {
         studentId: studentId,
         gameId: gameId,
       ),
-      thumbnailPath: 'assets/games/count_quest/count-quest-icon.png',
+      thumbnailPath: 'assets/games/shape_trace/shape-trace.png',
     ),
     15: _GameEntry(
       builder: (context, lessonId, studentId, gameId) => CountTo100Entry(
@@ -150,7 +150,7 @@ class GameRegistry {
         studentId: studentId,
         gameId: gameId,
       ),
-      thumbnailPath: 'assets/games/count_quest/count-quest-icon.png',
+      thumbnailPath: 'assets/games/count_to_100/count-to-100.png',
     ),
     16: _GameEntry(
       builder: (context, lessonId, studentId, gameId) => MatchManiaEntry(
@@ -166,7 +166,7 @@ class GameRegistry {
         studentId: studentId,
         gameId: gameId,
       ),
-      thumbnailPath: 'assets/games/count_quest/count-quest-icon.png',
+      thumbnailPath: 'assets/games/emotion_test/emotion-test.png',
     ),
     18: _GameEntry(
       builder: (context, lessonId, studentId, gameId) => TracingTimeEntry(
@@ -174,7 +174,7 @@ class GameRegistry {
         studentId: studentId,
         gameId: gameId,
       ),
-      thumbnailPath: 'assets/games/count_quest/count-quest-icon.png',
+      thumbnailPath: 'assets/games/tracing_time/tracing-time.png',
     ),
     19: _GameEntry(
       builder: (context, lessonId, studentId, gameId) => BalloonPopEntry(
@@ -182,7 +182,7 @@ class GameRegistry {
         studentId: studentId,
         gameId: gameId,
       ),
-      thumbnailPath: 'assets/games/count_quest/count-quest-icon.png',
+      thumbnailPath: 'assets/games/balloon_pop/balloon-pop.png',
     ),
   };
 
