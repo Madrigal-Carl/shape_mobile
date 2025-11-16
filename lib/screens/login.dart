@@ -113,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             SizedBox(height: MediaQuery.of(context).size.height * 0.20),
             Image.asset(
-              'assets/flutter/images/shape_logo.png',
+              'assets/flutter/images/logo.png',
               width: MediaQuery.of(context).size.width * 0.5,
               fit: BoxFit.cover,
             ),
