@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:shape_mobile/models/AwardModel.dart';
 import 'package:shape_mobile/db/app_database.dart';
+import 'package:shape_mobile/services/preference_service.dart';
 
 class AwardListWidget extends StatefulWidget {
   const AwardListWidget({super.key});
@@ -20,7 +21,10 @@ class _AwardListWidgetState extends State<AwardListWidget> {
   }
 
   Future<void> _loadAwards() async {
-    final awards = await AppDatabase.instance.fetchAllAwards();
+    final studentId = PreferenceService.studentId;
+    if (studentId == null) return;
+
+    final awards = await AppDatabase.instance.fetchStudentAwards(studentId);
 
     setState(() {
       _awards = awards;

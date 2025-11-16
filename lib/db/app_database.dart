@@ -339,9 +339,21 @@ class AppDatabase {
     return result.map((json) => Video.fromJson(json)).toList();
   }
 
-  Future<List<Award>> fetchAllAwards() async {
+  Future<List<Award>> fetchStudentAwards(int studentId) async {
     final db = await database;
-    final result = await db.query(awardsTable);
+
+    final result = await db.rawQuery(
+      '''
+    SELECT a.*
+    FROM $awardsTable a
+    INNER JOIN $studentAwardsTable sa
+      ON sa.award_id = a.id
+    WHERE sa.student_id = ?
+    ORDER BY a.created_at DESC
+  ''',
+      [studentId],
+    );
+
     return result.map((json) => Award.fromJson(json)).toList();
   }
 
