@@ -125,10 +125,6 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
     });
   }
 
-  Future<void> _playSound(String file) async {
-    await _audioPlayer.play(AssetSource('games/cast_spell/music/$file.m4a'));
-  }
-
   void _checkAnswer(String letter) {
     if (letter == missingLetter) {
       setState(() {
