@@ -122,13 +122,20 @@ class _MixedGameScreenState extends State<MixedGameScreen>
       _playCorrectSound();
 
       Future.delayed(const Duration(seconds: 1), () {
-        dragDisabled = false;
+        setState(() {
+          dragDisabled = false;
+        });
         _generateNewItem();
       });
     } else {
       setState(() => score -= 5);
       dragDisabled = true;
-      _shakeController.forward(from: 0).then((_) => dragDisabled = false);
+
+      _shakeController.forward(from: 0).then((_) {
+        setState(() {
+          dragDisabled = false; // Re-enable dragging after shake
+        });
+      });
     }
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math';
 import 'package:shape_mobile/services/game_progress_preference.dart';
+import 'package:confetti/confetti.dart';
 
 class HardGameScreen extends StatefulWidget {
   final int lessonId;
@@ -34,6 +35,9 @@ class _HardGameScreenState extends State<HardGameScreen>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
+  // 🎉 Confetti controller (single light burst)
+  late ConfettiController _confettiController;
+
   String currentBallAsset = 'ball_b.png';
   final List<String> ballTypes = [
     'cat_black.png',
@@ -51,6 +55,11 @@ class _HardGameScreenState extends State<HardGameScreen>
   @override
   void initState() {
     super.initState();
+
+    _confettiController = ConfettiController(
+      duration: const Duration(milliseconds: 600),
+    );
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -69,6 +78,7 @@ class _HardGameScreenState extends State<HardGameScreen>
 
   @override
   void dispose() {
+    _confettiController.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -94,6 +104,9 @@ class _HardGameScreenState extends State<HardGameScreen>
 
   void checkAnswer(int selected) {
     if (selected == currentCount) {
+      // 🎉 Play a single, subtle confetti burst on correct answer
+      _confettiController.play();
+
       setState(() {
         score += 10;
         if (currentLevelIndex == levelOrder.length - 1) {
@@ -147,6 +160,33 @@ class _HardGameScreenState extends State<HardGameScreen>
               child: Image.asset(
                 'assets/games/count_quest/images/bg2.png',
                 fit: BoxFit.cover,
+              ),
+            ),
+
+            // 🎉 Confetti widget (single-burst tuned)
+            Positioned(
+              top: width * 0.18,
+              left: 0,
+              right: 0,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiWidget(
+                  confettiController: _confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  // emissionFrequency 0 so it won't stream; single play() triggers burst
+                  emissionFrequency: 0,
+                  numberOfParticles: 12, // small pop
+                  maxBlastForce: 12,
+                  minBlastForce: 6,
+                  gravity: 0.35,
+                  shouldLoop: false,
+                  colors: const [
+                    Colors.yellow,
+                    Colors.orange,
+                    Colors.pink,
+                    Colors.white,
+                  ],
+                ),
               ),
             ),
 

@@ -101,6 +101,7 @@ class _ThingGameScreenState extends State<ThingGameScreen>
       currentWordData = unusedThings.removeAt(
         random.nextInt(unusedThings.length),
       );
+
       currentWord = currentWordData['word']!;
       missingIndex = random.nextInt(currentWord.length);
       missingLetter = currentWord[missingIndex];
@@ -124,10 +125,6 @@ class _ThingGameScreenState extends State<ThingGameScreen>
     });
   }
 
-  Future<void> _playSound(String file) async {
-    await _audioPlayer.play(AssetSource('games/cast_spell/music/$file.m4a'));
-  }
-
   void _checkAnswer(String letter) {
     if (letter == missingLetter) {
       setState(() {
@@ -135,8 +132,12 @@ class _ThingGameScreenState extends State<ThingGameScreen>
         score += 10;
         showTryAgain = false;
       });
+
       _confettiController.play();
-      _playSound('correct');
+
+      // ❌ REMOVED: no more correct sound
+      // _playSound('correct');
+
       Future.delayed(const Duration(seconds: 1), _generateNewWord);
     } else {
       setState(() {
@@ -205,7 +206,6 @@ class _ThingGameScreenState extends State<ThingGameScreen>
                   children: [
                     const SizedBox(height: 30),
 
-                    // SCORE BAR
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 25),
                       child: Row(
@@ -250,8 +250,8 @@ class _ThingGameScreenState extends State<ThingGameScreen>
                         fontSize: 34,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        shadows: [
-                          const Shadow(
+                        shadows: const [
+                          Shadow(
                             offset: Offset(2, 2),
                             blurRadius: 4,
                             color: Colors.black38,
@@ -275,7 +275,6 @@ class _ThingGameScreenState extends State<ThingGameScreen>
 
                     const SizedBox(height: 15),
 
-                    // THING IMAGE
                     ScaleTransition(
                       scale: CurvedAnimation(
                         parent: _imageController,
@@ -293,7 +292,6 @@ class _ThingGameScreenState extends State<ThingGameScreen>
 
                     const SizedBox(height: 25),
 
-                    // WORD DISPLAY
                     AnimatedBuilder(
                       animation: _shakeController,
                       builder: (context, child) {
@@ -361,6 +359,7 @@ class _ThingGameScreenState extends State<ThingGameScreen>
                             String asset = useSign
                                 ? 'assets/games/cast_spell/images/${letter.toLowerCase()}.png'
                                 : 'assets/games/cast_spell/images/letter_${letter.toLowerCase()}.png';
+
                             return Container(
                               width: tileSize,
                               height: tileSize,
@@ -390,7 +389,6 @@ class _ThingGameScreenState extends State<ThingGameScreen>
 
                     const SizedBox(height: 55),
 
-                    // LETTER CHOICES
                     Expanded(
                       child: GridView.builder(
                         padding: const EdgeInsets.symmetric(
@@ -435,7 +433,6 @@ class _ThingGameScreenState extends State<ThingGameScreen>
               ),
             ),
 
-            // MENU / HOW TO PLAY / WIN POPUPS
             if (showMenu)
               _dim(
                 Column(

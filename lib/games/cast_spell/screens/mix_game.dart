@@ -79,7 +79,7 @@ class _MixedGameScreenState extends State<MixedGameScreen>
   late AnimationController _shakeController;
   late AnimationController _imageController;
   late AnimationController _fadeInController;
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _audioPlayer = AudioPlayer(); // background music only
 
   @override
   void initState() {
@@ -147,9 +147,7 @@ class _MixedGameScreenState extends State<MixedGameScreen>
     });
   }
 
-  Future<void> _playSound(String file) async {
-    await _audioPlayer.play(AssetSource('games/cast_spell/music/$file.m4a'));
-  }
+  // REMOVED playSound() completely
 
   void _checkAnswer(String letter) {
     if (letter == missingLetter) {
@@ -159,7 +157,7 @@ class _MixedGameScreenState extends State<MixedGameScreen>
         showTryAgain = false;
       });
       _confettiController.play();
-      _playSound('correct');
+      // ❌ removed: _playSound('correct');
       Future.delayed(const Duration(seconds: 1), _generateNewItem);
     } else {
       setState(() {
@@ -375,6 +373,7 @@ class _MixedGameScreenState extends State<MixedGameScreen>
                             String asset = useSign
                                 ? 'assets/games/cast_spell/images/${letter.toLowerCase()}.png'
                                 : 'assets/games/cast_spell/images/letter_${letter.toLowerCase()}.png';
+
                             return Container(
                               width: tileSize,
                               height: tileSize,

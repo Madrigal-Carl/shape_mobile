@@ -21,7 +21,6 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
-  // ✅ Changed here
   int? answer;
   int score = 0;
   int currentRound = 0;
@@ -58,6 +57,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 1),
     );
@@ -75,7 +75,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
-
     _shakeAnimation = Tween<double>(
       begin: 0,
       end: 8,
@@ -110,8 +109,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       return;
     }
 
-    rounds[currentRound]['a']!;
-    rounds[currentRound]['b']!;
     int result = rounds[currentRound]['result']!;
     currentFruit = fruitList[random.nextInt(fruitList.length)];
 
@@ -130,7 +127,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     int correctResult = rounds[currentRound]['result']!;
 
     if (value == correctResult) {
-      // ✅ Correct answer
       score += 10;
       _confettiController.play();
 
@@ -151,7 +147,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         }
       });
     } else {
-      // ❌ Wrong answer → Shake + -5 points
       _shakeController.forward(from: 0);
       setState(() {
         score = (score - 5).clamp(0, 999);
@@ -184,13 +179,18 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
   }
 
+  /// ✅ FIXED DROP TARGET — NOW SHOWS THE DROPPED NUMBER PROPERLY
   Widget buildDropBox(
     Function(int?) onAccept,
     int? currentValue,
     VoidCallback onClear,
   ) {
     return DragTarget<int>(
-      onAccept: (value) => _checkAnswer(value),
+      onWillAccept: (value) => true,
+      onAccept: (value) {
+        setState(() => onAccept(value));
+        _checkAnswer(value); // check answer after showing value
+      },
       builder: (context, _, __) => GestureDetector(
         onTap: () {
           if (currentValue != null) _removeValue(onClear);
@@ -246,6 +246,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         (!showOverlay && rounds.isNotEmpty && currentRound < rounds.length)
         ? rounds[currentRound]['a']!
         : 1;
+
     final int bottomFruits =
         (!showOverlay && rounds.isNotEmpty && currentRound < rounds.length)
         ? rounds[currentRound]['b']!
@@ -254,22 +255,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     return WillPopScope(
       onWillPop: () async {
         if (showMenuPopup) {
-          // If menu is already open, close it
           setState(() => showMenuPopup = false);
         } else if (showHowToPlay) {
-          // If how-to-play popup is open, close it first
           setState(() => showHowToPlay = false);
-        } else if (showOverlay) {
-          // Prevent exiting on game over overlay — optional
-          return false;
-        } else {
-          // Otherwise, open the menu popup
-          setState(() {
-            showMenuPopup = true;
-          });
+        } else if (!showOverlay) {
+          setState(() => showMenuPopup = true);
           _menuAnimController.forward(from: 0);
         }
-        return false; // Prevent automatic pop
+        return false;
       },
       child: Scaffold(
         body: Stack(
@@ -360,7 +353,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     ),
                     const SizedBox(height: 30),
 
-                    // 🟩 Shake animation wrapper
+                    /// SHAKE WHEN WRONG
                     AnimatedBuilder(
                       animation: _shakeAnimation,
                       builder: (context, child) {
@@ -381,6 +374,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     ),
 
                     const Spacer(),
+
                     Container(
                       height: 80,
                       width: 250,
@@ -400,11 +394,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                             .toList(),
                       ),
                     ),
+
                     const SizedBox(height: 50),
                   ],
                 ),
               ),
             ),
+
+            /// CONFETTI
             Align(
               alignment: Alignment.center,
               child: ConfettiWidget(
@@ -415,6 +412,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 gravity: 0.4,
               ),
             ),
+
             if (showOverlay) _buildEndOverlay(),
             if (showMenuPopup) _buildMenuPopup(),
             if (showHowToPlay) _buildHowToPlayPopup(),

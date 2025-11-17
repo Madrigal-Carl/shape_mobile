@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:math';
 import 'hard_game_screen.dart';
 import 'package:shape_mobile/services/game_progress_preference.dart';
+import 'package:confetti/confetti.dart';
 
 class MediumGameScreen extends StatefulWidget {
   final int lessonId;
@@ -29,13 +30,14 @@ class _MediumGameScreenState extends State<MediumGameScreen>
   List<int> choices = [];
   final Random _random = Random();
 
+  late ConfettiController _confettiController;
+
   List<int> levelOrder = [];
   int currentLevelIndex = 0;
 
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
-  // 🎨 Random ball type (changes each round)
   String currentBallAsset = 'ball_b.png';
   final List<String> ballTypes = [
     'cat_black.png',
@@ -49,6 +51,10 @@ class _MediumGameScreenState extends State<MediumGameScreen>
   @override
   void initState() {
     super.initState();
+
+    _confettiController = ConfettiController(
+      duration: const Duration(milliseconds: 600),
+    );
 
     _controller = AnimationController(
       vsync: this,
@@ -68,28 +74,25 @@ class _MediumGameScreenState extends State<MediumGameScreen>
 
   @override
   void dispose() {
+    _confettiController.dispose();
     _controller.dispose();
     super.dispose();
   }
 
-  // 🔢 Generate level order from 6–10
   void _generateLevelOrder() {
     levelOrder = [6, 7, 8, 9, 10]..shuffle();
     currentLevelIndex = 0;
   }
 
-  // ⚙️ Setup current round
   void _setCurrentRound() {
     currentCount = levelOrder[currentLevelIndex];
     _generateChoices();
 
-    // 🔀 Randomize which ball image is used this round
     currentBallAsset = ballTypes[_random.nextInt(ballTypes.length)];
 
     _controller.forward(from: 0.8);
   }
 
-  // 🎯 Generate 3 choices (1 correct, 2 wrong)
   void _generateChoices() {
     List<int> all = [6, 7, 8, 9, 10];
     all.remove(currentCount);
@@ -97,12 +100,15 @@ class _MediumGameScreenState extends State<MediumGameScreen>
     choices = [currentCount, all[0], all[1]]..shuffle();
   }
 
-  // ✅ Check answer
   void checkAnswer(int selected) async {
     if (selected == currentCount) {
+      // 🎉 PLAY CONFETTI ON CORRECT
+      _confettiController.play();
+
       _controller.forward(from: 0.8);
       setState(() {
-        score += 15; // Medium = higher reward
+        score += 15;
+
         if (currentLevelIndex == levelOrder.length - 1) {
           GameProgressPreference.saveProgress(
             studentId: widget.studentId,
@@ -118,7 +124,7 @@ class _MediumGameScreenState extends State<MediumGameScreen>
       });
     } else {
       setState(() {
-        score = (score - 10).clamp(0, score); // Medium = higher penalty
+        score = (score - 10).clamp(0, score);
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -139,13 +145,9 @@ class _MediumGameScreenState extends State<MediumGameScreen>
     return WillPopScope(
       onWillPop: () async {
         if (showMenu) {
-          setState(() {
-            showMenu = false;
-          });
+          setState(() => showMenu = false);
         } else {
-          setState(() {
-            showMenu = true;
-          });
+          setState(() => showMenu = true);
         }
         return false;
       },
@@ -156,6 +158,20 @@ class _MediumGameScreenState extends State<MediumGameScreen>
               child: Image.asset(
                 'assets/games/count_quest/images/bg2.png',
                 fit: BoxFit.cover,
+              ),
+            ),
+
+            // 🎉 CONFETTI WIDGET
+            Positioned.fill(
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirectionality: BlastDirectionality.explosive,
+                numberOfParticles: 12,
+                maxBlastForce: 10,
+                minBlastForce: 6,
+                gravity: 0.4,
+                shouldLoop: false,
+                colors: const [Colors.yellow, Colors.orange, Colors.white],
               ),
             ),
 
@@ -254,7 +270,7 @@ class _MediumGameScreenState extends State<MediumGameScreen>
 
                   const SizedBox(height: 20),
 
-                  // 🎾 Balls display
+                  // 🎾 Balls
                   Expanded(
                     flex: 3,
                     child: LayoutBuilder(
@@ -273,7 +289,6 @@ class _MediumGameScreenState extends State<MediumGameScreen>
                           ),
                         );
 
-                        // Split into rows (max 5 per row)
                         List<Widget> rows = [];
                         for (int i = 0; i < balls.length; i += 5) {
                           rows.add(
@@ -355,16 +370,12 @@ class _MediumGameScreenState extends State<MediumGameScreen>
               ),
             ),
 
-            // 📋 Menu button
+            // 📋 Menu Button
             Positioned(
               top: 55,
               right: 15,
               child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    showMenu = true;
-                  });
-                },
+                onTap: () => setState(() => showMenu = true),
                 child: Image.asset(
                   'assets/games/count_quest/images/menu.png',
                   width: 50,
@@ -380,7 +391,10 @@ class _MediumGameScreenState extends State<MediumGameScreen>
     );
   }
 
-  // 🏆 Victory Overlay
+  // -------------------------
+  // OVERLAYS (unchanged)
+  // -------------------------
+
   Widget _buildVictoryOverlay(double width) {
     return Positioned.fill(
       child: Container(
@@ -482,7 +496,6 @@ class _MediumGameScreenState extends State<MediumGameScreen>
     );
   }
 
-  // 🛠️ Pause Menu Overlay (with HOW popup)
   Widget _buildMenuOverlay(double width) {
     return Positioned.fill(
       child: Container(
@@ -492,11 +505,7 @@ class _MediumGameScreenState extends State<MediumGameScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               GestureDetector(
-                onTap: () {
-                  setState(() {
-                    showMenu = false;
-                  });
-                },
+                onTap: () => setState(() => showMenu = false),
                 child: Image.asset(
                   'assets/games/count_quest/images/continue.png',
                   width: width * 0.5,
@@ -504,7 +513,6 @@ class _MediumGameScreenState extends State<MediumGameScreen>
               ),
               const SizedBox(height: 20),
 
-              // HOW TO PLAY popup
               GestureDetector(
                 onTap: () {
                   showDialog(
@@ -514,10 +522,7 @@ class _MediumGameScreenState extends State<MediumGameScreen>
                       return Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Dark overlay background
                           Container(color: Colors.black.withOpacity(0.7)),
-
-                          // Popup image
                           Center(
                             child: Stack(
                               alignment: Alignment.topRight,
@@ -527,8 +532,6 @@ class _MediumGameScreenState extends State<MediumGameScreen>
                                   width: width * 0.85,
                                   fit: BoxFit.contain,
                                 ),
-
-                                // ❌ Close button on top-right of the image
                                 Positioned(
                                   top: 10,
                                   right: 10,
@@ -556,11 +559,8 @@ class _MediumGameScreenState extends State<MediumGameScreen>
 
               const SizedBox(height: 20),
 
-              // QUIT button
               GestureDetector(
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
+                onTap: () => Navigator.pop(context),
                 child: Image.asset(
                   'assets/games/count_quest/images/quit.png',
                   width: width * 0.5,

@@ -34,7 +34,7 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
     {'word': 'bibe', 'image': 'duck.png'},
     {'word': 'elepante', 'image': 'elephant.png'},
     {'word': 'kuneho', 'image': 'rabbit.png'},
-    {'word': 'tigre', 'image': 'lion.png'},
+    {'word': 'lion', 'image': 'lion.png'},
   ];
 
   late List<Map<String, String>> unusedAnimals;
@@ -136,8 +136,12 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
         score += 10;
         showTryAgain = false;
       });
+
       _confettiController.play();
-      _playSound('correct');
+
+      // ❌ SOUND REMOVED HERE — no more "correct" sound
+      // _playSound('correct');
+
       Future.delayed(const Duration(seconds: 1), _generateNewWord);
     } else {
       setState(() {
@@ -206,7 +210,6 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
                   children: [
                     const SizedBox(height: 30),
 
-                    // SCORE BAR
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 25),
                       child: Row(
@@ -276,7 +279,6 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
 
                     const SizedBox(height: 15),
 
-                    // ANIMAL IMAGE
                     ScaleTransition(
                       scale: CurvedAnimation(
                         parent: _imageController,
@@ -294,7 +296,6 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
 
                     const SizedBox(height: 25),
 
-                    // WORD DISPLAY
                     AnimatedBuilder(
                       animation: _shakeController,
                       builder: (context, child) {
@@ -391,7 +392,6 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
 
                     const SizedBox(height: 55),
 
-                    // LETTER CHOICES
                     Expanded(
                       child: GridView.builder(
                         padding: const EdgeInsets.symmetric(
@@ -436,7 +436,6 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
               ),
             ),
 
-            // MENU / HOW TO PLAY / WIN POPUPS
             if (showMenu)
               _dim(
                 Column(

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:math';
 import 'medium_game_screen.dart';
 import 'package:shape_mobile/services/game_progress_preference.dart';
+import 'package:confetti/confetti.dart';
 
 class CountingGameScreen extends StatefulWidget {
   final int lessonId;
@@ -35,7 +36,9 @@ class _CountingGameScreenState extends State<CountingGameScreen>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
-  // 🎨 Random ball type (changes each round)
+  /// ❗ More subtle confetti controller
+  late ConfettiController _confettiController;
+
   String currentBallAsset = 'ball_b.png';
   final List<String> ballTypes = ['ball_b.png', 'ball_v.png', 'ball_s.png'];
 
@@ -55,6 +58,11 @@ class _CountingGameScreenState extends State<CountingGameScreen>
       curve: Curves.easeInOutBack,
     );
 
+    /// ❗ smoother, cleaner, 500ms duration only
+    _confettiController = ConfettiController(
+      duration: const Duration(milliseconds: 500),
+    );
+
     _generateLevelOrder();
     _setCurrentRound();
   }
@@ -62,6 +70,7 @@ class _CountingGameScreenState extends State<CountingGameScreen>
   @override
   void dispose() {
     _controller.dispose();
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -70,12 +79,10 @@ class _CountingGameScreenState extends State<CountingGameScreen>
     currentLevelIndex = 0;
   }
 
-  // ⚙️ Setup current round
   void _setCurrentRound() {
     currentCount = levelOrder[currentLevelIndex];
     _generateChoices();
 
-    // 🔀 Randomize which ball image is used this round
     currentBallAsset = ballTypes[_random.nextInt(ballTypes.length)];
 
     _controller.forward(from: 0.8);
@@ -90,9 +97,13 @@ class _CountingGameScreenState extends State<CountingGameScreen>
 
   void checkAnswer(int selected) async {
     if (selected == currentCount) {
+      _confettiController.play(); // 🎉 subtle burst
+
       _controller.forward(from: 0.8);
+
       setState(() {
         score += 10;
+
         if (currentLevelIndex == levelOrder.length - 1) {
           GameProgressPreference.saveProgress(
             studentId: widget.studentId,
@@ -100,6 +111,7 @@ class _CountingGameScreenState extends State<CountingGameScreen>
             gameId: widget.gameId,
             subgameName: 'counting',
           );
+
           showOverlay = true;
         } else {
           currentLevelIndex++;
@@ -122,7 +134,7 @@ class _CountingGameScreenState extends State<CountingGameScreen>
     }
   }
 
-  // 🪧 HOW TO PLAY popup
+  // How to play popup
   void _showHowToPlayPopup() {
     showGeneralDialog(
       context: context,
@@ -170,13 +182,9 @@ class _CountingGameScreenState extends State<CountingGameScreen>
     return WillPopScope(
       onWillPop: () async {
         if (showMenu) {
-          setState(() {
-            showMenu = false;
-          });
+          setState(() => showMenu = false);
         } else {
-          setState(() {
-            showMenu = true;
-          });
+          setState(() => showMenu = true);
         }
         return false;
       },
@@ -190,12 +198,29 @@ class _CountingGameScreenState extends State<CountingGameScreen>
               ),
             ),
 
+            /// ⭐ CLEANER & LESS CONFETTI ⭐
+            Positioned(
+              top: width * 0.50,
+              left: 0,
+              right: 0,
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirectionality: BlastDirectionality.explosive,
+                emissionFrequency: 0.01,
+                numberOfParticles: 20, // reduced from 30
+                maxBlastForce: 25, // softer impact
+                minBlastForce: 20,
+                gravity: 0.25,
+                colors: const [Colors.yellow, Colors.orange, Colors.white],
+              ),
+            ),
+
             SafeArea(
               child: Column(
                 children: [
                   const SizedBox(height: 50),
 
-                  // 🧮 SCORE BAR
+                  // Score bar
                   Stack(
                     alignment: Alignment.center,
                     children: [
@@ -226,12 +251,8 @@ class _CountingGameScreenState extends State<CountingGameScreen>
                             ),
                             AnimatedSwitcher(
                               duration: const Duration(milliseconds: 400),
-                              transitionBuilder:
-                                  (Widget child, Animation<double> animation) =>
-                                      ScaleTransition(
-                                        scale: animation,
-                                        child: child,
-                                      ),
+                              transitionBuilder: (child, anim) =>
+                                  ScaleTransition(scale: anim, child: child),
                               child: Text(
                                 "$score",
                                 key: ValueKey<int>(score),
@@ -257,7 +278,7 @@ class _CountingGameScreenState extends State<CountingGameScreen>
 
                   const SizedBox(height: 25),
 
-                  // 🔢 Question
+                  // Question
                   Column(
                     children: [
                       Image.asset(
@@ -285,7 +306,7 @@ class _CountingGameScreenState extends State<CountingGameScreen>
 
                   const SizedBox(height: 20),
 
-                  // 🎾 Balls display
+                  // Balls
                   Expanded(
                     flex: 3,
                     child: LayoutBuilder(
@@ -346,7 +367,7 @@ class _CountingGameScreenState extends State<CountingGameScreen>
                     ),
                   ),
 
-                  // 🪵 Choices
+                  // Choices
                   Padding(
                     padding: const EdgeInsets.only(bottom: 25),
                     child: Container(
@@ -390,16 +411,12 @@ class _CountingGameScreenState extends State<CountingGameScreen>
               ),
             ),
 
-            // 📋 Menu button
+            // Menu button
             Positioned(
               top: 55,
               right: 15,
               child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    showMenu = true;
-                  });
-                },
+                onTap: () => setState(() => showMenu = true),
                 child: Image.asset(
                   'assets/games/count_quest/images/menu.png',
                   width: 50,
@@ -525,11 +542,7 @@ class _CountingGameScreenState extends State<CountingGameScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               GestureDetector(
-                onTap: () {
-                  setState(() {
-                    showMenu = false;
-                  });
-                },
+                onTap: () => setState(() => showMenu = false),
                 child: Image.asset(
                   'assets/games/count_quest/images/continue.png',
                   width: width * 0.5,
@@ -537,7 +550,7 @@ class _CountingGameScreenState extends State<CountingGameScreen>
               ),
               const SizedBox(height: 20),
               GestureDetector(
-                onTap: _showHowToPlayPopup, // ✅ now triggers popup
+                onTap: _showHowToPlayPopup,
                 child: Image.asset(
                   'assets/games/count_quest/images/htp.png',
                   width: width * 0.5,
@@ -545,9 +558,7 @@ class _CountingGameScreenState extends State<CountingGameScreen>
               ),
               const SizedBox(height: 20),
               GestureDetector(
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
+                onTap: () => Navigator.of(context).pop(),
                 child: Image.asset(
                   'assets/games/count_quest/images/quit.png',
                   width: width * 0.5,

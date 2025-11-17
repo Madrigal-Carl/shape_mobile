@@ -53,7 +53,7 @@ class _ThingGameScreenState extends State<ThingGameScreen>
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   late AnimationController _shakeController;
-  late Animation<double> _shakeAnimation = AlwaysStoppedAnimation(0);
+  late Animation<double> _shakeAnimation;
 
   @override
   void initState() {
@@ -102,30 +102,49 @@ class _ThingGameScreenState extends State<ThingGameScreen>
   }
 
   Future<void> _playCorrectSound() async {
-    await _audioPlayer.play(AssetSource('games/objectify/music/correct.m4a'));
+    try {
+      await _audioPlayer.play(AssetSource('games/objectify/music/correct.m4a'));
+    } catch (e) {
+      // Ignore audio errors silently (or handle as you need)
+    }
   }
 
   void _checkAnswer(String selectedThing) {
     if (dragDisabled) return;
 
     if (selectedThing == currentThing) {
+      // correct
       setState(() {
         droppedThing = selectedThing;
         score += 10;
+        dragDisabled = true;
       });
 
-      dragDisabled = true;
       _confettiController.play();
       _playCorrectSound();
 
       Future.delayed(const Duration(seconds: 1), () {
-        dragDisabled = false;
+        // ensure UI updates when re-enabling drag
+        setState(() {
+          dragDisabled = false;
+        });
         _generateNewThing();
       });
     } else {
-      setState(() => score -= 5);
-      dragDisabled = true;
-      _shakeController.forward(from: 0).then((_) => dragDisabled = false);
+      // wrong
+      setState(() {
+        score -= 5;
+        dragDisabled = true;
+      });
+
+      // animate shake and then re-enable drags with a setState
+      _shakeController.forward(from: 0).whenComplete(() {
+        // reset controller so next forward(from:0) works predictably
+        _shakeController.reset();
+        setState(() {
+          dragDisabled = false;
+        });
+      });
     }
   }
 
@@ -458,7 +477,7 @@ class _ThingGameScreenState extends State<ThingGameScreen>
                                   studentId: widget.studentId,
                                   gameId: widget.gameId,
                                 ),
-                              ), // ✅ fixed closing braces
+                              ),
                             );
                           }),
                         ],

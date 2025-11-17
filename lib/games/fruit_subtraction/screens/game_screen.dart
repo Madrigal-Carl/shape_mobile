@@ -1,3 +1,5 @@
+// FULL CODE WITH "ONLY CORRECT ANSWER CAN ENTER THE BOX" FIX APPLIED
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:confetti/confetti.dart';
@@ -21,7 +23,6 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
-  // ✅ Changed here
   int? answer;
   int score = 0;
   int currentRound = 0;
@@ -52,12 +53,18 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   late AnimationController _menuAnimController;
   late Animation<double> _menuScaleAnim;
 
+  // DROP BOX SHAKE
   late AnimationController _shakeController;
   late Animation<double> _shakeAnimation;
+
+  // WOOD SHAKE
+  late AnimationController _woodShakeController;
+  late Animation<double> _woodShakeAnimation;
 
   @override
   void initState() {
     super.initState();
+
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 1),
     );
@@ -81,6 +88,16 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       end: 8,
     ).chain(CurveTween(curve: Curves.elasticIn)).animate(_shakeController);
 
+    _woodShakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    _woodShakeAnimation = Tween<double>(
+      begin: 0,
+      end: 10,
+    ).chain(CurveTween(curve: Curves.elasticIn)).animate(_woodShakeController);
+
     _generateRounds();
     _loadNextRound();
   }
@@ -90,6 +107,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     _confettiController.dispose();
     _menuAnimController.dispose();
     _shakeController.dispose();
+    _woodShakeController.dispose();
     super.dispose();
   }
 
@@ -110,8 +128,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       return;
     }
 
-    rounds[currentRound]['a']!;
-    rounds[currentRound]['b']!;
     int result = rounds[currentRound]['result']!;
     currentFruit = fruitList[random.nextInt(fruitList.length)];
 
@@ -130,7 +146,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     int correctResult = rounds[currentRound]['result']!;
 
     if (value == correctResult) {
-      // ✅ Correct answer
       score += 10;
       _confettiController.play();
 
@@ -151,8 +166,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         }
       });
     } else {
-      // ❌ Wrong answer → Shake + -5 points
       _shakeController.forward(from: 0);
+      _woodShakeController.forward(from: 0);
+
       setState(() {
         score = (score - 5).clamp(0, 999);
       });
@@ -163,6 +179,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     setState(() {
       clearFunction();
       score = (score - 5).clamp(0, 999);
+      _shakeController.forward(from: 0);
+      _woodShakeController.forward(from: 0);
     });
   }
 
@@ -187,13 +205,33 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
   }
 
+  // ✅ FIXED: ONLY CORRECT ANSWER CAN BE PLACED INSIDE BOX
   Widget buildDropBox(
     Function(int?) onAccept,
     int? currentValue,
     VoidCallback onClear,
   ) {
+    int correctAnswer = rounds[currentRound]['result']!;
+
     return DragTarget<int>(
-      onAccept: (value) => _checkAnswer(value),
+      onWillAccept: (value) {
+        // Only allow correct answer to enter box
+        if (value != correctAnswer) {
+          _shakeController.forward(from: 0);
+          _woodShakeController.forward(from: 0);
+          setState(() {
+            score = (score - 5).clamp(0, 999);
+          });
+          return false;
+        }
+        return true;
+      },
+
+      onAccept: (value) {
+        setState(() => answer = value);
+        _checkAnswer(value);
+      },
+
       builder: (context, _, __) => GestureDetector(
         onTap: () {
           if (currentValue != null) _removeValue(onClear);
@@ -249,6 +287,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         (!showOverlay && rounds.isNotEmpty && currentRound < rounds.length)
         ? rounds[currentRound]['a']!
         : 1;
+
     final int bottomFruits =
         (!showOverlay && rounds.isNotEmpty && currentRound < rounds.length)
         ? rounds[currentRound]['b']!
@@ -357,7 +396,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     ),
                     const SizedBox(height: 30),
 
-                    // 🟩 Shake animation wrapper
+                    // DROP BOX SHAKE
                     AnimatedBuilder(
                       animation: _shakeAnimation,
                       builder: (context, child) {
@@ -378,30 +417,47 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     ),
 
                     const Spacer(),
-                    Container(
-                      height: 80,
-                      width: 250,
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      decoration: const BoxDecoration(
-                        image: DecorationImage(
-                          image: AssetImage(
-                            "assets/games/fruit_subtraction/images/wood.png",
+
+                    // WOOD CHOICES SHAKE
+                    AnimatedBuilder(
+                      animation: _woodShakeAnimation,
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset: Offset(
+                            _woodShakeAnimation.value *
+                                sin(DateTime.now().millisecondsSinceEpoch / 50),
+                            0,
                           ),
-                          fit: BoxFit.fill,
+                          child: child,
+                        );
+                      },
+                      child: Container(
+                        height: 80,
+                        width: 250,
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        decoration: const BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage(
+                              "assets/games/fruit_subtraction/images/wood.png",
+                            ),
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: currentChoices
+                              .map((n) => draggableNum("$n.png", n))
+                              .toList(),
                         ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: currentChoices
-                            .map((n) => draggableNum("$n.png", n))
-                            .toList(),
-                      ),
                     ),
+
                     const SizedBox(height: 30),
                   ],
                 ),
               ),
             ),
+
             Align(
               alignment: Alignment.center,
               child: ConfettiWidget(
@@ -412,6 +468,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 gravity: 0.4,
               ),
             ),
+
             if (showOverlay) _buildEndOverlay(),
             if (showMenuPopup) _buildMenuPopup(),
             if (showHowToPlay) _buildHowToPlayPopup(),

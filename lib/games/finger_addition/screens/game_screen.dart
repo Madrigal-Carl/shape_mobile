@@ -20,8 +20,7 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen>
-    with SingleTickerProviderStateMixin {
+class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   int? firstNumber;
   int? secondNumber;
   int? answer;
@@ -42,12 +41,22 @@ class _GameScreenState extends State<GameScreen>
   late AnimationController _menuAnimController;
   late Animation<double> _menuScaleAnim;
 
+  // Shake controllers for three boxes (first, second, answer)
+  late AnimationController _shakeControllerA;
+  late Animation<Offset> _shakeAnimA;
+  late AnimationController _shakeControllerB;
+  late Animation<Offset> _shakeAnimB;
+  late AnimationController _shakeControllerC;
+  late Animation<Offset> _shakeAnimC;
+
   @override
   void initState() {
     super.initState();
+
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 1),
     );
+
     _menuAnimController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -56,6 +65,80 @@ class _GameScreenState extends State<GameScreen>
       parent: _menuAnimController,
       curve: Curves.easeOutBack,
     );
+
+    // shake controllers (quick shake)
+    _shakeControllerA = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _shakeAnimA = TweenSequence<Offset>(
+      [
+        TweenSequenceItem(
+          tween: Tween(begin: Offset.zero, end: const Offset(-0.06, 0)),
+          weight: 1,
+        ),
+        TweenSequenceItem(
+          tween: Tween(
+            begin: const Offset(-0.06, 0),
+            end: const Offset(0.06, 0),
+          ),
+          weight: 1,
+        ),
+        TweenSequenceItem(
+          tween: Tween(begin: const Offset(0.06, 0), end: Offset.zero),
+          weight: 1,
+        ),
+      ],
+    ).animate(CurvedAnimation(parent: _shakeControllerA, curve: Curves.linear));
+
+    _shakeControllerB = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _shakeAnimB = TweenSequence<Offset>(
+      [
+        TweenSequenceItem(
+          tween: Tween(begin: Offset.zero, end: const Offset(-0.06, 0)),
+          weight: 1,
+        ),
+        TweenSequenceItem(
+          tween: Tween(
+            begin: const Offset(-0.06, 0),
+            end: const Offset(0.06, 0),
+          ),
+          weight: 1,
+        ),
+        TweenSequenceItem(
+          tween: Tween(begin: const Offset(0.06, 0), end: Offset.zero),
+          weight: 1,
+        ),
+      ],
+    ).animate(CurvedAnimation(parent: _shakeControllerB, curve: Curves.linear));
+
+    _shakeControllerC = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _shakeAnimC = TweenSequence<Offset>(
+      [
+        TweenSequenceItem(
+          tween: Tween(begin: Offset.zero, end: const Offset(-0.06, 0)),
+          weight: 1,
+        ),
+        TweenSequenceItem(
+          tween: Tween(
+            begin: const Offset(-0.06, 0),
+            end: const Offset(0.06, 0),
+          ),
+          weight: 1,
+        ),
+        TweenSequenceItem(
+          tween: Tween(begin: const Offset(0.06, 0), end: Offset.zero),
+          weight: 1,
+        ),
+      ],
+    ).animate(CurvedAnimation(parent: _shakeControllerC, curve: Curves.linear));
+
     _generateRounds();
     _loadNextRound();
   }
@@ -64,6 +147,9 @@ class _GameScreenState extends State<GameScreen>
   void dispose() {
     _confettiController.dispose();
     _menuAnimController.dispose();
+    _shakeControllerA.dispose();
+    _shakeControllerB.dispose();
+    _shakeControllerC.dispose();
     super.dispose();
   }
 
@@ -142,7 +228,6 @@ class _GameScreenState extends State<GameScreen>
             gameId: widget.gameId,
             subgameName: 'finger_addition',
           );
-
           setState(() => showOverlay = true);
         } else {
           setState(() {
@@ -184,12 +269,57 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
+  /// Build DropBox now accepts expectedValue getter and shake animation
   Widget buildDropBox(
     Function(int?) onAccept,
     int? currentValue,
     VoidCallback onClear,
+    int boxIndex, // 0 = first, 1 = second, 2 = answer
   ) {
+    // get expected value based on current round and box type
+    int? expectedValue() {
+      if (rounds.isEmpty || currentRound >= rounds.length) return null;
+      if (boxIndex == 0) return rounds[currentRound]['a'];
+      if (boxIndex == 1) return rounds[currentRound]['b'];
+      if (boxIndex == 2)
+        return showAnswerChoices ? rounds[currentRound]['sum'] : null;
+      return null;
+    }
+
+    Animation<Offset> anim;
+    AnimationController controller;
+    if (boxIndex == 0) {
+      anim = _shakeAnimA;
+      controller = _shakeControllerA;
+    } else if (boxIndex == 1) {
+      anim = _shakeAnimB;
+      controller = _shakeControllerB;
+    } else {
+      anim = _shakeAnimC;
+      controller = _shakeControllerC;
+    }
+
     return DragTarget<int>(
+      // If wrong value -> reject and shake. If correct -> accept.
+      onWillAccept: (value) {
+        final int? expect = expectedValue();
+        if (expect == null) return false; // not ready (don't accept)
+        if (value == expect) {
+          return true;
+        } else {
+          // wrong — trigger shake animation and deduct points (once)
+          if (mounted) {
+            controller.forward(from: 0.0);
+            Future.delayed(const Duration(milliseconds: 350), () {
+              if (mounted) controller.reverse();
+            });
+            setState(() {
+              score = (score - 5).clamp(0, 999);
+            });
+          }
+          return false;
+        }
+      },
       onAccept: (value) {
         setState(() => onAccept(value));
 
@@ -204,30 +334,33 @@ class _GameScreenState extends State<GameScreen>
           checkIfCorrect();
         }
       },
-      builder: (context, _, __) => GestureDetector(
+      builder: (context, candidateData, rejectedData) => GestureDetector(
         onTap: () {
           if (currentValue != null) {
             _removeValue(onClear);
           }
         },
-        child: Container(
-          width: 70,
-          height: 70,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(
-                "assets/games/finger_addition/images/woodbox.png",
+        child: SlideTransition(
+          position: anim,
+          child: Container(
+            width: 70,
+            height: 70,
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(
+                  "assets/games/finger_addition/images/woodbox.png",
+                ),
+                fit: BoxFit.cover,
               ),
-              fit: BoxFit.cover,
             ),
+            alignment: Alignment.center,
+            child: currentValue != null
+                ? Image.asset(
+                    "assets/games/finger_addition/images/$currentValue.png",
+                    height: 45,
+                  )
+                : const SizedBox(),
           ),
-          alignment: Alignment.center,
-          child: currentValue != null
-              ? Image.asset(
-                  "assets/games/finger_addition/images/$currentValue.png",
-                  height: 45,
-                )
-              : const SizedBox(),
         ),
       ),
     );
@@ -247,22 +380,18 @@ class _GameScreenState extends State<GameScreen>
     return WillPopScope(
       onWillPop: () async {
         if (showMenuPopup) {
-          // If menu is already open, close it
           setState(() => showMenuPopup = false);
         } else if (showHowToPlay) {
-          // If how-to-play popup is open, close it first
           setState(() => showHowToPlay = false);
         } else if (showOverlay) {
-          // Prevent exiting on game over overlay — optional
           return false;
         } else {
-          // Otherwise, open the menu popup
           setState(() {
             showMenuPopup = true;
           });
           _menuAnimController.forward(from: 0);
         }
-        return false; // Prevent automatic pop
+        return false;
       },
       child: Scaffold(
         body: Stack(
@@ -334,8 +463,7 @@ class _GameScreenState extends State<GameScreen>
                       ),
                     ),
                     Text(
-                      "Count the fingers, drag the correct numbers\n"
-                      "then find the total to complete the equation!",
+                      "Count the fingers, drag the correct numbers\nthen find the total to complete the equation!",
                       textAlign: TextAlign.center,
                       style: GoogleFonts.dynaPuff(
                         color: Colors.white70,
@@ -370,6 +498,7 @@ class _GameScreenState extends State<GameScreen>
                           (v) => firstNumber = v,
                           firstNumber,
                           () => firstNumber = null,
+                          0,
                         ),
                         const SizedBox(width: 15),
                         Image.asset(
@@ -381,6 +510,7 @@ class _GameScreenState extends State<GameScreen>
                           (v) => secondNumber = v,
                           secondNumber,
                           () => secondNumber = null,
+                          1,
                         ),
                         const SizedBox(width: 15),
                         Image.asset(
@@ -392,6 +522,7 @@ class _GameScreenState extends State<GameScreen>
                           (v) => answer = v,
                           answer,
                           () => answer = null,
+                          2,
                         ),
                       ],
                     ),
@@ -463,7 +594,7 @@ class _GameScreenState extends State<GameScreen>
                             onTap: () {
                               setState(() {
                                 showMenuPopup = false;
-                                showHowToPlay = true; // ✅ show how to play
+                                showHowToPlay = true;
                               });
                             },
                             child: Image.asset(

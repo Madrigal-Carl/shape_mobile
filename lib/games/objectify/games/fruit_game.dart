@@ -53,7 +53,7 @@ class _FruitGameScreenState extends State<FruitGameScreen>
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   late AnimationController _shakeController;
-  late Animation<double> _shakeAnimation = AlwaysStoppedAnimation(0);
+  late Animation<double> _shakeAnimation;
 
   @override
   void initState() {
@@ -65,7 +65,7 @@ class _FruitGameScreenState extends State<FruitGameScreen>
 
     _shakeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 350),
     );
 
     _shakeAnimation = Tween<double>(
@@ -93,10 +93,12 @@ class _FruitGameScreenState extends State<FruitGameScreen>
     setState(() {
       currentFruit = unusedFruits[random.nextInt(unusedFruits.length)];
       unusedFruits.remove(currentFruit);
+
       droppedFruit = null;
 
-      List<String> temp = List.from(allFruits)..remove(currentFruit);
+      final temp = List<String>.from(allFruits)..remove(currentFruit);
       temp.shuffle();
+
       currentChoices = [...temp.take(5), currentFruit]..shuffle();
     });
   }
@@ -105,7 +107,9 @@ class _FruitGameScreenState extends State<FruitGameScreen>
     await _audioPlayer.play(AssetSource('games/objectify/music/correct.m4a'));
   }
 
-  /// ✅ Answer checking
+  /// --------------------------------------------------------
+  /// ✅ FIXED ANSWER CHECKING (drag works after mistake)
+  /// --------------------------------------------------------
   void _checkAnswer(String selectedFruit) {
     if (dragDisabled) return;
 
@@ -124,9 +128,17 @@ class _FruitGameScreenState extends State<FruitGameScreen>
         _generateNewFruit();
       });
     } else {
+      /// ❌ Wrong answer → shake + deduct score
       setState(() => score -= 5);
+
       dragDisabled = true;
-      _shakeController.forward(from: 0).then((_) => dragDisabled = false);
+
+      _shakeController.forward(from: 0).then((_) {
+        /// ✨ FIX: enable dragging immediately after shake
+        setState(() {
+          dragDisabled = false;
+        });
+      });
     }
   }
 
@@ -167,6 +179,7 @@ class _FruitGameScreenState extends State<FruitGameScreen>
               ),
             ),
 
+            /// CONFETTI
             Align(
               alignment: Alignment.center,
               child: ConfettiWidget(
@@ -181,6 +194,7 @@ class _FruitGameScreenState extends State<FruitGameScreen>
                 children: [
                   const SizedBox(height: 40),
 
+                  /// SCORE
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 30),
                     child: Row(
@@ -231,7 +245,7 @@ class _FruitGameScreenState extends State<FruitGameScreen>
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Text(
-                      "Identify the correct fruit by looking at the picture and choosing the right answer.",
+                      "Identify the correct fruit by looking at the picture.",
                       textAlign: TextAlign.center,
                       style: GoogleFonts.dynaPuff(
                         fontSize: 14,
@@ -242,21 +256,10 @@ class _FruitGameScreenState extends State<FruitGameScreen>
 
                   const SizedBox(height: 10),
 
+                  /// FRUIT IMAGE
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 500),
                     switchInCurve: Curves.easeOutBack,
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: ScaleTransition(
-                          scale: Tween<double>(
-                            begin: 0.8,
-                            end: 1.0,
-                          ).animate(animation),
-                          child: child,
-                        ),
-                      );
-                    },
                     child: Image.asset(
                       'assets/games/objectify/images/$currentFruit.png',
                       key: ValueKey(currentFruit),
@@ -266,15 +269,17 @@ class _FruitGameScreenState extends State<FruitGameScreen>
 
                   const SizedBox(height: 20),
 
+                  /// DRAG TARGET + SHAKE
                   AnimatedBuilder(
                     animation: _shakeAnimation,
-                    builder: (context, child) {
+                    builder: (_, child) {
                       return Transform.translate(
                         offset: Offset(_shakeAnimation.value, 0),
                         child: child,
                       );
                     },
                     child: DragTarget<String>(
+                      onWillAccept: (data) => !dragDisabled && data != null,
                       onAccept: (data) => _checkAnswer(data),
                       builder: (_, __, ___) {
                         return Stack(
@@ -295,12 +300,12 @@ class _FruitGameScreenState extends State<FruitGameScreen>
                     ),
                   ),
 
+                  /// CHOICE BUTTONS
                   Expanded(
                     child: GridView.builder(
-                      padding: const EdgeInsets.only(
-                        left: 40,
-                        right: 40,
-                        top: 20,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 40,
+                        vertical: 20,
                       ),
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
@@ -335,15 +340,15 @@ class _FruitGameScreenState extends State<FruitGameScreen>
               ),
             ),
 
+            /// MENU POPUP
             if (showMenu)
               _dim(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    menuBtn(
-                      "continue.png",
-                      () => setState(() => showMenu = false),
-                    ),
+                    menuBtn("continue.png", () {
+                      setState(() => showMenu = false);
+                    }),
                     const SizedBox(height: 15),
                     menuBtn("htp.png", () {
                       setState(() {
@@ -356,7 +361,7 @@ class _FruitGameScreenState extends State<FruitGameScreen>
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => GameMenuScreen(
+                          builder: (_) => GameMenuScreen(
                             lessonId: widget.lessonId,
                             studentId: widget.studentId,
                             gameId: widget.gameId,
@@ -368,6 +373,7 @@ class _FruitGameScreenState extends State<FruitGameScreen>
                 ),
               ),
 
+            /// HOW TO PLAY
             if (showHowToPlay)
               _dim(
                 child: Stack(
@@ -392,6 +398,7 @@ class _FruitGameScreenState extends State<FruitGameScreen>
                 ),
               ),
 
+            /// WIN POPUP
             if (showWinPopup)
               _dim(
                 child: Stack(
@@ -423,7 +430,7 @@ class _FruitGameScreenState extends State<FruitGameScreen>
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => GameMenuScreen(
+                                builder: (_) => GameMenuScreen(
                                   lessonId: widget.lessonId,
                                   studentId: widget.studentId,
                                   gameId: widget.gameId,
@@ -442,18 +449,16 @@ class _FruitGameScreenState extends State<FruitGameScreen>
                           }),
                           const SizedBox(width: 10),
                           popupIcon("next.png", () {
-                            setState(() {
-                              showWinPopup = false;
-                            });
+                            setState(() => showWinPopup = false);
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ThingGameScreen(
+                                builder: (_) => ThingGameScreen(
                                   lessonId: widget.lessonId,
                                   studentId: widget.studentId,
                                   gameId: widget.gameId,
                                 ),
-                              ), // ✅ fixed closing braces
+                              ),
                             );
                           }),
                         ],

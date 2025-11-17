@@ -50,9 +50,12 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
 
   late ConfettiController _confettiController;
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _audioPlayerWrong = AudioPlayer();
 
   late AnimationController _shakeController;
-  late Animation<double> _shakeAnimation = AlwaysStoppedAnimation(0);
+  late Animation<double> _shakeAnimation;
+
+  final Random _random = Random();
 
   @override
   void initState() {
@@ -62,15 +65,15 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
       duration: const Duration(seconds: 1),
     );
 
-    /// 🔥 SHAKE ANIMATION
+    /// SHAKE ANIMATION
     _shakeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 300),
     );
 
     _shakeAnimation = Tween<double>(
       begin: 0,
-      end: 15,
+      end: 12,
     ).chain(CurveTween(curve: Curves.elasticIn)).animate(_shakeController);
 
     unusedAnimals = List.from(allAnimals);
@@ -89,47 +92,69 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
       return;
     }
 
-    final random = Random();
     setState(() {
-      currentAnimal = unusedAnimals[random.nextInt(unusedAnimals.length)];
+      currentAnimal = unusedAnimals[_random.nextInt(unusedAnimals.length)];
       unusedAnimals.remove(currentAnimal);
       droppedAnimal = null;
 
       List<String> temp = List.from(allAnimals)..remove(currentAnimal);
-      temp.shuffle();
-      currentChoices = [...temp.take(5), currentAnimal]..shuffle();
+      temp.shuffle(_random);
+      currentChoices = [...temp.take(5), currentAnimal]..shuffle(_random);
     });
   }
 
   Future<void> _playCorrectSound() async {
-    await _audioPlayer.play(AssetSource('games/objectify/music/correct.m4a'));
+    try {
+      await _audioPlayer.play(AssetSource('games/objectify/music/correct.m4a'));
+    } catch (_) {}
   }
 
-  /// ✅ CORRECT WRONG ANSWER HANDLING
+  Future<void> _playWrongSound() async {
+    try {
+      await _audioPlayerWrong.play(
+        AssetSource('games/objectify/music/wrong.m4a'),
+      );
+    } catch (_) {}
+  }
+
+  /// ANSWER CHECKING
   void _checkAnswer(String selectedAnimal) {
     if (dragDisabled) return;
 
     if (selectedAnimal == currentAnimal) {
       setState(() {
         droppedAnimal = selectedAnimal;
-        score += 10;
+        score = (score + 10);
+        // ensure non-negative (should already be)
+        if (score < 0) score = 0;
       });
 
-      dragDisabled = true;
+      setState(() => dragDisabled = true);
       _confettiController.play();
       _playCorrectSound();
 
-      Future.delayed(const Duration(seconds: 1), () {
-        dragDisabled = false;
+      // Brief delay so user sees the correct placed card & confetti
+      Future.delayed(const Duration(milliseconds: 800), () {
+        setState(() => dragDisabled = false);
         _generateNewAnimal();
       });
     } else {
-      /// ❌ WRONG ANSWER (shake + score penalty)
-      setState(() => score -= 5);
+      // WRONG: penalize, play sound, shake, then re-enable dragging
+      setState(() {
+        score = max(0, score - 5); // don't go below 0
+        dragDisabled = true;
+      });
 
-      dragDisabled = true;
+      _playWrongSound();
+
+      // animate forward then reverse so the drop area returns to its original spot
       _shakeController.forward(from: 0).then((_) {
-        dragDisabled = false;
+        _shakeController.reverse().whenComplete(() {
+          // small delay to make sure reverse finished visually
+          Future.delayed(const Duration(milliseconds: 50), () {
+            setState(() => dragDisabled = false);
+          });
+        });
       });
     }
   }
@@ -139,6 +164,7 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
     _confettiController.dispose();
     _shakeController.dispose();
     _audioPlayer.dispose();
+    _audioPlayerWrong.dispose();
     super.dispose();
   }
 
@@ -249,7 +275,7 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
 
                   const SizedBox(height: 10),
 
-                  /// ✅ SUPER SMOOTH FADE & SCALE ANIMATION
+                  /// IMAGE WITH FADE & SCALE ANIMATION
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 500),
                     switchInCurve: Curves.easeOutBack,
@@ -276,7 +302,7 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
 
                   const SizedBox(height: 20),
 
-                  /// ✅ DROP CONTAINER + SHAKE animation
+                  /// DROP CONTAINER + SHAKE animation
                   AnimatedBuilder(
                     animation: _shakeAnimation,
                     builder: (context, child) {
@@ -286,6 +312,7 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
                       );
                     },
                     child: DragTarget<String>(
+                      onWillAccept: (data) => data != null && !dragDisabled,
                       onAccept: (data) => _checkAnswer(data),
                       builder: (context, accepted, rejected) {
                         return Stack(
@@ -323,8 +350,18 @@ class _AnimalGameScreenState extends State<AnimalGameScreen>
                       itemBuilder: (context, index) {
                         final animal = currentChoices[index];
 
+                        // If dragging is disabled, show a static card (no draggable).
+                        if (dragDisabled) {
+                          return Opacity(
+                            opacity: 0.6,
+                            child: Image.asset(
+                              'assets/games/objectify/images/card_$animal.png',
+                            ),
+                          );
+                        }
+
                         return Draggable<String>(
-                          data: dragDisabled ? null : animal,
+                          data: animal,
                           feedback: Image.asset(
                             'assets/games/objectify/images/card_$animal.png',
                             width: 110,

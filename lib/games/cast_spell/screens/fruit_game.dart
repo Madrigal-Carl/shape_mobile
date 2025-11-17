@@ -125,8 +125,14 @@ class _FruitGameScreenState extends State<FruitGameScreen>
     });
   }
 
-  Future<void> _playSound(String file) async {
-    await _audioPlayer.play(AssetSource('games/cast_spell/music/$file.m4a'));
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    _shakeController.dispose();
+    _imageController.dispose();
+    _fadeInController.dispose();
+    _audioPlayer.dispose();
+    super.dispose();
   }
 
   void _checkAnswer(String letter) {
@@ -136,8 +142,10 @@ class _FruitGameScreenState extends State<FruitGameScreen>
         score += 10;
         showTryAgain = false;
       });
+
+      // Removed correct sound here
       _confettiController.play();
-      _playSound('correct');
+
       Future.delayed(const Duration(seconds: 1), _generateNewWord);
     } else {
       setState(() {
@@ -146,16 +154,6 @@ class _FruitGameScreenState extends State<FruitGameScreen>
       });
       _shakeController.forward(from: 0);
     }
-  }
-
-  @override
-  void dispose() {
-    _confettiController.dispose();
-    _shakeController.dispose();
-    _imageController.dispose();
-    _fadeInController.dispose();
-    _audioPlayer.dispose();
-    super.dispose();
   }
 
   @override
@@ -206,7 +204,6 @@ class _FruitGameScreenState extends State<FruitGameScreen>
                   children: [
                     const SizedBox(height: 30),
 
-                    // SCORE BAR
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 25),
                       child: Row(
@@ -276,7 +273,6 @@ class _FruitGameScreenState extends State<FruitGameScreen>
 
                     const SizedBox(height: 15),
 
-                    // FRUIT IMAGE
                     ScaleTransition(
                       scale: CurvedAnimation(
                         parent: _imageController,
@@ -294,7 +290,6 @@ class _FruitGameScreenState extends State<FruitGameScreen>
 
                     const SizedBox(height: 25),
 
-                    // WORD DISPLAY
                     AnimatedBuilder(
                       animation: _shakeController,
                       builder: (context, child) {
@@ -391,7 +386,6 @@ class _FruitGameScreenState extends State<FruitGameScreen>
 
                     const SizedBox(height: 55),
 
-                    // LETTER CHOICES
                     Expanded(
                       child: GridView.builder(
                         padding: const EdgeInsets.symmetric(
@@ -436,7 +430,6 @@ class _FruitGameScreenState extends State<FruitGameScreen>
               ),
             ),
 
-            // MENU / HOW TO PLAY / WIN POPUPS
             if (showMenu)
               _dim(
                 Column(

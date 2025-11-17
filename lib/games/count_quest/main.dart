@@ -16,12 +16,16 @@ class CountQuestRoot extends StatefulWidget {
   });
 
   @override
-  State<CountQuestRoot> createState() => _CountQuestRootState();
+  State<CountQuestRoot> createState() => CountQuestRootState(); // ✅ FIXED
 }
 
-class _CountQuestRootState extends State<CountQuestRoot>
+class CountQuestRootState extends State<CountQuestRoot>
     with WidgetsBindingObserver {
   late final AudioPlayer _audioPlayer;
+  bool isMuted = false;
+
+  AudioPlayer get bgmPlayer => _audioPlayer;
+  bool get muteState => isMuted;
 
   @override
   void initState() {
@@ -41,12 +45,20 @@ class _CountQuestRootState extends State<CountQuestRoot>
     }
   }
 
+  void toggleMute() {
+    setState(() {
+      isMuted = !isMuted;
+    });
+
+    _audioPlayer.setVolume(isMuted ? 0 : 1);
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
       _audioPlayer.pause();
     } else if (state == AppLifecycleState.resumed) {
-      _audioPlayer.resume();
+      if (!isMuted) _audioPlayer.resume();
     }
   }
 
@@ -63,6 +75,7 @@ class _CountQuestRootState extends State<CountQuestRoot>
       lessonId: widget.lessonId,
       studentId: widget.studentId,
       gameId: widget.gameId,
+      rootState: this, // 🔥 pass root state
     );
   }
 }

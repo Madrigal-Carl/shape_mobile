@@ -1,3 +1,5 @@
+// FULL CODE WITH -5 SCORE DEDUCTION ON WRONG DROP
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:confetti/confetti.dart';
@@ -20,8 +22,7 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen>
-    with SingleTickerProviderStateMixin {
+class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   int? firstNumber;
   int? secondNumber;
   int? answer;
@@ -42,20 +43,42 @@ class _GameScreenState extends State<GameScreen>
   late AnimationController _menuAnimController;
   late Animation<double> _menuScaleAnim;
 
+  /// Shake Animations
+  late AnimationController _shakeA;
+  late AnimationController _shakeB;
+  late AnimationController _shakeAns;
+
   @override
   void initState() {
     super.initState();
+
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 1),
     );
+
     _menuAnimController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+
     _menuScaleAnim = CurvedAnimation(
       parent: _menuAnimController,
       curve: Curves.easeOutBack,
     );
+
+    _shakeA = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _shakeB = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _shakeAns = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
     _generateRounds();
     _loadNextRound();
   }
@@ -64,10 +87,13 @@ class _GameScreenState extends State<GameScreen>
   void dispose() {
     _confettiController.dispose();
     _menuAnimController.dispose();
+    _shakeA.dispose();
+    _shakeB.dispose();
+    _shakeAns.dispose();
     super.dispose();
   }
 
-  /// 🔢 Generate subtraction rounds (no negative answers)
+  /// Generate subtraction rounds
   void _generateRounds() {
     List<Map<String, int>> allCombos = [];
     for (int a = 1; a <= 5; a++) {
@@ -76,7 +102,7 @@ class _GameScreenState extends State<GameScreen>
       }
     }
     allCombos.shuffle(random);
-    rounds = allCombos.take(10).toList(); // 10 unique rounds
+    rounds = allCombos.take(10).toList();
   }
 
   void _loadNextRound() {
@@ -102,9 +128,23 @@ class _GameScreenState extends State<GameScreen>
     });
   }
 
-  void checkIfReadyForSubtraction() {
-    if (rounds.isEmpty || currentRound >= rounds.length) return;
+  bool _validateDrop(int droppedValue, String type) {
+    final correctA = rounds[currentRound]['a']!;
+    final correctB = rounds[currentRound]['b']!;
+    final correctResult = rounds[currentRound]['result']!;
 
+    switch (type) {
+      case "A":
+        return droppedValue == correctA;
+      case "B":
+        return droppedValue == correctB;
+      case "ANS":
+        return droppedValue == correctResult;
+    }
+    return false;
+  }
+
+  void checkIfReadyForSubtraction() {
     final correctA = rounds[currentRound]['a']!;
     final correctB = rounds[currentRound]['b']!;
 
@@ -123,8 +163,6 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void checkIfCorrect() {
-    if (rounds.isEmpty || currentRound >= rounds.length) return;
-
     final correctA = rounds[currentRound]['a']!;
     final correctB = rounds[currentRound]['b']!;
     final correctResult = rounds[currentRound]['result']!;
@@ -152,18 +190,10 @@ class _GameScreenState extends State<GameScreen>
           });
         }
       });
-    } else {
-      debugPrint("❌ WRONG!");
     }
   }
 
-  void _removeValue(Function() clearFunction) {
-    setState(() {
-      clearFunction();
-      score = (score - 5).clamp(0, 999);
-    });
-  }
-
+  /// Draggable widget
   Widget draggableNum(String img, int value) {
     return Draggable<int>(
       data: value,
@@ -185,52 +215,80 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  Widget buildDropBox(
-    Function(int?) onAccept,
-    int? currentValue,
-    VoidCallback onClear,
-  ) {
+  /// Shake wrap
+  Widget shakeBox(AnimationController controller, Widget child) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        double offset = sin(controller.value * pi * 4) * 8;
+        return Transform.translate(offset: Offset(offset, 0), child: child);
+      },
+    );
+  }
+
+  /// Drop Box w/ validation + shake + score deduct
+  Widget buildDropBox({
+    required Function(int) onCorrect,
+    required AnimationController shakeController,
+    required String type,
+    required int? currentValue,
+    required VoidCallback onClear,
+  }) {
     return DragTarget<int>(
       onAccept: (value) {
-        setState(() => onAccept(value));
+        if (_validateDrop(value, type)) {
+          onCorrect(value);
 
-        if (!showAnswerChoices && firstNumber != null && secondNumber != null) {
-          checkIfReadyForSubtraction();
-        }
+          if (!showAnswerChoices &&
+              firstNumber != null &&
+              secondNumber != null) {
+            checkIfReadyForSubtraction();
+          }
 
-        if (showAnswerChoices &&
-            firstNumber != null &&
-            secondNumber != null &&
-            answer != null) {
-          checkIfCorrect();
+          if (showAnswerChoices &&
+              firstNumber != null &&
+              secondNumber != null &&
+              answer != null) {
+            checkIfCorrect();
+          }
+        } else {
+          shakeController.forward(from: 0);
+
+          /// 🔥 Wrong drop → minus 5 score
+          setState(() {
+            score = max(0, score - 5);
+          });
         }
       },
-      builder: (context, _, __) => GestureDetector(
-        onTap: () {
-          if (currentValue != null) {
-            _removeValue(onClear);
-          }
-        },
-        child: Container(
-          width: 70,
-          height: 70,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(
-                "assets/games/finger_subtraction/images/woodbox.png",
+      builder: (context, _, __) {
+        return shakeBox(
+          shakeController,
+          GestureDetector(
+            onTap: () {
+              if (currentValue != null) onClear();
+            },
+            child: Container(
+              width: 70,
+              height: 70,
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(
+                    "assets/games/finger_subtraction/images/woodbox.png",
+                  ),
+                  fit: BoxFit.cover,
+                ),
               ),
-              fit: BoxFit.cover,
+              alignment: Alignment.center,
+              child: currentValue != null
+                  ? Image.asset(
+                      "assets/games/finger_subtraction/images/$currentValue.png",
+                      height: 45,
+                    )
+                  : const SizedBox(),
             ),
           ),
-          alignment: Alignment.center,
-          child: currentValue != null
-              ? Image.asset(
-                  "assets/games/finger_subtraction/images/$currentValue.png",
-                  height: 45,
-                )
-              : const SizedBox(),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -240,6 +298,7 @@ class _GameScreenState extends State<GameScreen>
         (!showOverlay && rounds.isNotEmpty && currentRound < rounds.length)
         ? rounds[currentRound]['a']!
         : 1;
+
     final int rightFinger =
         (!showOverlay && rounds.isNotEmpty && currentRound < rounds.length)
         ? rounds[currentRound]['b']!
@@ -262,7 +321,7 @@ class _GameScreenState extends State<GameScreen>
       child: Scaffold(
         body: Stack(
           children: [
-            /// Background + UI
+            /// Background
             Container(
               decoration: const BoxDecoration(
                 image: DecorationImage(
@@ -304,7 +363,7 @@ class _GameScreenState extends State<GameScreen>
                             ],
                           ),
 
-                          /// MENU
+                          /// MENU BUTTON
                           GestureDetector(
                             onTap: () {
                               setState(() {
@@ -320,6 +379,7 @@ class _GameScreenState extends State<GameScreen>
                         ],
                       ),
                     ),
+
                     Text(
                       "Fingers Subtraction",
                       style: GoogleFonts.dynaPuff(
@@ -328,6 +388,7 @@ class _GameScreenState extends State<GameScreen>
                         color: Colors.white,
                       ),
                     ),
+
                     Text(
                       "Count the fingers, drag the correct numbers\nthen find the difference!",
                       textAlign: TextAlign.center,
@@ -336,7 +397,9 @@ class _GameScreenState extends State<GameScreen>
                         fontSize: 14,
                       ),
                     ),
+
                     const SizedBox(height: 30),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -348,7 +411,7 @@ class _GameScreenState extends State<GameScreen>
                         Image.asset(
                           "assets/games/finger_subtraction/images/add.png",
                           height: 15,
-                        ), // 👈 keep the same image!
+                        ),
                         const SizedBox(width: 25),
                         Image.asset(
                           "assets/games/finger_subtraction/images/finger$rightFinger.png",
@@ -356,40 +419,62 @@ class _GameScreenState extends State<GameScreen>
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 60),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        /// BOX A
                         buildDropBox(
-                          (v) => firstNumber = v,
-                          firstNumber,
-                          () => firstNumber = null,
+                          type: "A",
+                          shakeController: _shakeA,
+                          currentValue: firstNumber,
+                          onCorrect: (v) => setState(() => firstNumber = v),
+                          onClear: () => setState(() => firstNumber = null),
                         ),
+
                         const SizedBox(width: 15),
+
                         Image.asset(
                           "assets/games/finger_subtraction/images/add.png",
                           height: 10,
                         ),
+
                         const SizedBox(width: 10),
+
+                        /// BOX B
                         buildDropBox(
-                          (v) => secondNumber = v,
-                          secondNumber,
-                          () => secondNumber = null,
+                          type: "B",
+                          shakeController: _shakeB,
+                          currentValue: secondNumber,
+                          onCorrect: (v) => setState(() => secondNumber = v),
+                          onClear: () => setState(() => secondNumber = null),
                         ),
+
                         const SizedBox(width: 15),
+
                         Image.asset(
                           "assets/games/finger_subtraction/images/equals.png",
                           height: 25,
                         ),
+
                         const SizedBox(width: 15),
+
+                        /// ANSWER BOX
                         buildDropBox(
-                          (v) => answer = v,
-                          answer,
-                          () => answer = null,
+                          type: "ANS",
+                          shakeController: _shakeAns,
+                          currentValue: answer,
+                          onCorrect: (v) => setState(() => answer = v),
+                          onClear: () => setState(() => answer = null),
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 120),
+
+                    /// Number row
                     Container(
                       height: 80,
                       width: 250,
@@ -426,19 +511,18 @@ class _GameScreenState extends State<GameScreen>
               ),
             ),
 
-            /// Game Over
             if (showOverlay) _buildEndOverlay(),
-
-            /// Menu Popup
             if (showMenuPopup) _buildMenuPopup(),
-
-            /// How To Play Popup
             if (showHowToPlay) _buildHowToPlayPopup(),
           ],
         ),
       ),
     );
   }
+
+  // --------------------------------
+  // POPUPS
+  // --------------------------------
 
   Widget _buildMenuPopup() => AnimatedOpacity(
     opacity: 1,
