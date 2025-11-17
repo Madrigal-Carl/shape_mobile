@@ -23,7 +23,7 @@ class ApiException implements Exception {
 }
 
 class AuthService {
-  final String baseUrl = "http://145.79.13.96/api";
+  final String baseUrl = "https://shape-dlhms.site/api";
   final PreferenceService _prefs = PreferenceService();
 
   Future<bool> loginStudent(
@@ -33,7 +33,8 @@ class AuthService {
   }) async {
     onProgress?.call("Sending login request...");
 
-    final url = Uri.parse("$baseUrl/student/login");
+    // final url = Uri.parse("$baseUrl/student/login");
+    final url = Uri.https("shape-dlhms.site", "/api/student/login");
     final response = await http.post(
       url,
       body: {"username": username, "password": password},
@@ -177,7 +178,8 @@ class AuthService {
     if (studentId == null) return false;
 
     final db = AppDatabase.instance;
-    final url = Uri.parse("$baseUrl/student/sync-all");
+    // final url = Uri.parse("$baseUrl/student/sync-all");
+    final url = Uri.https("shape-dlhms.site", "/api/student/sync-all");
     final token = PreferenceService.token;
 
     // 1️⃣ Sync local activities first
@@ -524,7 +526,8 @@ class AuthService {
     final token = PreferenceService.token;
     if (token == null) return false;
 
-    final url = Uri.parse("$baseUrl/student/logout");
+    // final url = Uri.parse("$baseUrl/student/logout");
+    final url = Uri.https("shape-dlhms.site", "/api/student/logout");
 
     try {
       final response = await http
@@ -584,7 +587,9 @@ class AuthService {
       return true;
     }
 
-    final url = Uri.parse('$baseUrl/student/sync-activity');
+    // final url = Uri.parse('$baseUrl/student/sync-activity');
+    final url = Uri.https("shape-dlhms.site", "/api/student/sync-activity");
+
     final token = PreferenceService.token;
 
     final activities = unsyncedActivities.map((activity) {
